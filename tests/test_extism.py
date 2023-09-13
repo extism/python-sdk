@@ -107,6 +107,6 @@ class TestExtism(unittest.TestCase):
 
 
 def read_test_wasm(p):
-    path = join(dirname(__file__), "..", "..", "wasm", p)
+    path = join(dirname(__file__), "..", "wasm", p)
     with open(path, "rb") as wasm_file:
         return wasm_file.read()

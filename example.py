@@ -31,9 +31,7 @@ def main(args):
     else:
         data = b"a" * 1024
 
-    wasm_file_path = (
-        pathlib.Path(__file__).parent.parent / "wasm" / "code-functions.wasm"
-    )
+    wasm_file_path = pathlib.Path(__file__).parent / "wasm" / "code-functions.wasm"
     wasm = wasm_file_path.read_bytes()
     hash = hashlib.sha256(wasm).hexdigest()
     manifest = {"wasm": [{"data": wasm, "hash": hash}]}

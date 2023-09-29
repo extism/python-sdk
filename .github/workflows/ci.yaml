@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         rust:
           - stable
     steps:
@@ -30,22 +30,6 @@ jobs:
           cache: 'poetry'
 
       - run: poetry install
-
-      - name: download extism development release
-        run: |
-          set -eou pipefail
-          arch="$(<<<'${{ runner.arch }}' sed -e 's/ARM64/aarch64/g')"
-          arch="${arch/X64/x86_64}"
-          os="$(<<<'${{ runner.os }}' tr '[:upper:]' '[:lower:]')"
-          os="${os/macos/darwin}"
-
-          echo "attempting to download 'libextism-${arch}-${os}-*.tar.gz'"
-          gh release -R extism/extism download latest -p "libextism-${arch}-*${os}-*.tar.gz"
-          tar zxfv *.tar.gz
-          sudo mv libextism.* /usr/local/lib/
-          sudo mv extism.h /usr/local/include/
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Run Python lint
         run: |

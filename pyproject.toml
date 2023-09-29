@@ -9,6 +9,13 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.7"
 cffi = "^1.10.0"
+extism-sys = [
+  {platform = "darwin", markers="sys_platform == 'darwin' and platform_machine!='x86_64'", url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_11_0_arm64.whl"},
+  {platform = "darwin", markers="sys_platform == 'darwin' and platform_machine=='x86_64'", url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_10_7_x86_64.whl"},
+  {platform = "linux", markers="sys_platform == 'linux' and platform_machine!='x86_64'", url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"},
+  {platform = "linux", markers="sys_platform == 'linux' and platform_machine=='x86_64'", url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"},
+  {platform = "win32", markers="sys_platform == 'win32'", url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-win_amd64.whl"},
+]
 
 [tool.poetry.dev-dependencies]
 black = "^23.1.0"

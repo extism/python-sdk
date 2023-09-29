@@ -1,7 +1,11 @@
-export PATH := env_var("PATH") + ":" + env_var("HOME") + "/.local/bin"
+export PATH := env_var("PATH") + ":" + env_var_or_default("HOME", env_var_or_default("APPDATA", "")) + "/.local/bin"
 
-help:
-  just --list
+# Make just arguments available as env vars; useful for preserving
+# quotes.
+set export
+
+_help:
+  @just --list
 
 prepare:
   #!/bin/bash
@@ -9,22 +13,17 @@ prepare:
     curl -sSL https://install.python-poetry.org | sed -e 's|symlinks=False|symlinks=True|' | python3 -
   fi
 
-  if ! &>/dev/null poetry env list; then
-    poetry install
-  fi
-
-  # check for presence of the extism shared library and headers, installing
-  # then if necessary
-  if ! &>/dev/null poetry run python3 -m extism.utils; then
-    if ! &>/dev/null which extism; then
-      pip3 install git+https://github.com/extism/cli
-    fi
-
-    extism install git
+  envs="$(poetry env list || true)"
+  if [ ! $? ] || [ -z "$envs" ]; then
+    poetry install --no-cache
   fi
 
 test: prepare
   poetry run python -m unittest discover
+
+poetry *args: prepare
+  #!/bin/bash
+  poetry $args
 
 clean:
   rm -rf dist/*

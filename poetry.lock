@@ -153,6 +153,91 @@ files = [
 ]
 
 [[package]]
+name = "extism-sys"
+version = "0.0.0.dev0"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "extism_sys-0.0.0.dev0-py3-none-macosx_10_7_x86_64.whl", hash = "sha256:d0f49b7ecb06b6db6111e42d5fea9f9085d8a6aa9dacb866c7e568b0f5eaf407"},
+]
+
+[package.dependencies]
+cffi = "*"
+
+[package.source]
+type = "url"
+url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_10_7_x86_64.whl"
+
+[[package]]
+name = "extism-sys"
+version = "0.0.0.dev0"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "extism_sys-0.0.0.dev0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a4e4fdf62b707dc94dc1a421e74fdb417d1c8c18853b9cca8285e6c056cc3b15"},
+]
+
+[package.dependencies]
+cffi = "*"
+
+[package.source]
+type = "url"
+url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_11_0_arm64.whl"
+
+[[package]]
+name = "extism-sys"
+version = "0.0.0.dev0"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:16a605ee0c3323dd534021737719a32ae74944b4436e9db5f84dd5fd1b2eee14"},
+]
+
+[package.dependencies]
+cffi = "*"
+
+[package.source]
+type = "url"
+url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+
+[[package]]
+name = "extism-sys"
+version = "0.0.0.dev0"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:807f1cb9341099de8e7800c7e52bf98e234ae57c781e4a0a6199ac2f40f7c28c"},
+]
+
+[package.dependencies]
+cffi = "*"
+
+[package.source]
+type = "url"
+url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+
+[[package]]
+name = "extism-sys"
+version = "0.0.0.dev0"
+description = ""
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "extism_sys-0.0.0.dev0-py3-none-win_amd64.whl", hash = "sha256:1e325863e6366b29bbe2444a6c288a0d7fe1aeada258cfb64e8e3b5ef7abeea2"},
+]
+
+[package.dependencies]
+cffi = "*"
+
+[package.source]
+type = "url"
+url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-win_amd64.whl"
+
+[[package]]
 name = "importlib-metadata"
 version = "6.7.0"
 description = "Read metadata from Python packages"
@@ -404,4 +489,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "f92a92c8e234e1dd62d216d632b553600ac7067231d20d6d4d621a846fcc346c"
+content-hash = "e1caffe12fe23ead6ab9ae7cde932fa8018513cf5f349cdc99cd8a59a6be2359"

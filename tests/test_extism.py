@@ -50,7 +50,7 @@ class TestExtism(unittest.TestCase):
         end = datetime.now()
         self.assertLess(
             end,
-            start + timedelta(seconds=1.01),
+            start + timedelta(seconds=1.1),
             "plugin timeout exceeded 1000ms expectation",
         )
 

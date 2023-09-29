@@ -5,18 +5,13 @@ from cffi import FFI
 from typing import Union
 from enum import Enum
 from uuid import UUID
-from .utils import _locate, Error
+from extism_sys import lib as _lib, ffi as _ffi
 
-# Initialize the C library
-_ffi = FFI()
-_header, _lib = _locate()
-with open(_header) as f:
-    lines = []
-    for line in f.readlines():
-        if line[0] != "#":
-            lines.append(line)
-    _ffi.cdef("".join(lines))
-_lib = _ffi.dlopen(_lib)
+
+class Error(Exception):
+    """Extism error type"""
+
+    pass
 
 
 class _Base64Encoder(json.JSONEncoder):

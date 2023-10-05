@@ -154,88 +154,21 @@ files = [
 
 [[package]]
 name = "extism-sys"
-version = "0.0.0.dev0"
+version = "0.5.3"
 description = ""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "extism_sys-0.0.0.dev0-py3-none-macosx_10_7_x86_64.whl", hash = "sha256:d0f49b7ecb06b6db6111e42d5fea9f9085d8a6aa9dacb866c7e568b0f5eaf407"},
+    {file = "extism_sys-0.5.3-py3-none-macosx_10_7_x86_64.whl", hash = "sha256:fa8a482b862952dfff7dff0b1dc71f772d60f597d9d84f0c58da635876abdab3"},
+    {file = "extism_sys-0.5.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:936db5d988cb1d1ef135a6d56ea457e5800c30c8f0bf5cffbc989024707bb2ca"},
+    {file = "extism_sys-0.5.3-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6c4fcd727dad8c51acce7d8cf2b740805e13a20cde61b65a98347736b850f27f"},
+    {file = "extism_sys-0.5.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:33b50ce134649ddf63faa8f121ca72d0c5c8b16b5754befb8419ea22a55387cf"},
+    {file = "extism_sys-0.5.3-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:472470c22941e7931cd3193cf1fabd5685cdc4d5c43440b727a5f5fb07860ef5"},
+    {file = "extism_sys-0.5.3-py3-none-win_amd64.whl", hash = "sha256:2c7cc5008c47a23e81840886af45e774c186808b4c6157d83dd09b00cd9fd0f4"},
 ]
 
 [package.dependencies]
 cffi = "*"
-
-[package.source]
-type = "url"
-url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_10_7_x86_64.whl"
-
-[[package]]
-name = "extism-sys"
-version = "0.0.0.dev0"
-description = ""
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "extism_sys-0.0.0.dev0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a4e4fdf62b707dc94dc1a421e74fdb417d1c8c18853b9cca8285e6c056cc3b15"},
-]
-
-[package.dependencies]
-cffi = "*"
-
-[package.source]
-type = "url"
-url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-macosx_11_0_arm64.whl"
-
-[[package]]
-name = "extism-sys"
-version = "0.0.0.dev0"
-description = ""
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:16a605ee0c3323dd534021737719a32ae74944b4436e9db5f84dd5fd1b2eee14"},
-]
-
-[package.dependencies]
-cffi = "*"
-
-[package.source]
-type = "url"
-url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
-
-[[package]]
-name = "extism-sys"
-version = "0.0.0.dev0"
-description = ""
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:807f1cb9341099de8e7800c7e52bf98e234ae57c781e4a0a6199ac2f40f7c28c"},
-]
-
-[package.dependencies]
-cffi = "*"
-
-[package.source]
-type = "url"
-url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-
-[[package]]
-name = "extism-sys"
-version = "0.0.0.dev0"
-description = ""
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "extism_sys-0.0.0.dev0-py3-none-win_amd64.whl", hash = "sha256:1e325863e6366b29bbe2444a6c288a0d7fe1aeada258cfb64e8e3b5ef7abeea2"},
-]
-
-[package.dependencies]
-cffi = "*"
-
-[package.source]
-type = "url"
-url = "https://github.com/extism/extism/releases/download/latest/extism_sys-0.0.0.dev0-py3-none-win_amd64.whl"
 
 [[package]]
 name = "importlib-metadata"
@@ -288,13 +221,13 @@ files = [
 
 [[package]]
 name = "packaging"
-version = "23.1"
+version = "23.2"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "packaging-23.1-py3-none-any.whl", hash = "sha256:994793af429502c4ea2ebf6bf664629d07c1a9fe974af92966e4b8d2df7edc61"},
-    {file = "packaging-23.1.tar.gz", hash = "sha256:a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f"},
+    {file = "packaging-23.2-py3-none-any.whl", hash = "sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7"},
+    {file = "packaging-23.2.tar.gz", hash = "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5"},
 ]
 
 [[package]]
@@ -310,13 +243,13 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "3.10.0"
+version = "3.11.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.10.0-py3-none-any.whl", hash = "sha256:d7c24979f292f916dc9cbf8648319032f551ea8c49a4c9bf2fb556a02070ec1d"},
-    {file = "platformdirs-3.10.0.tar.gz", hash = "sha256:b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d"},
+    {file = "platformdirs-3.11.0-py3-none-any.whl", hash = "sha256:e9d171d00af68be50e9202731309c4e658fd8bc76f55c11c7dd760d023bda68e"},
+    {file = "platformdirs-3.11.0.tar.gz", hash = "sha256:cf8ee52a3afdb965072dcc652433e0c7e3e40cf5ea1477cd4b3b1d2eb75495b3"},
 ]
 
 [package.dependencies]
@@ -489,4 +422,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "e1caffe12fe23ead6ab9ae7cde932fa8018513cf5f349cdc99cd8a59a6be2359"
+content-hash = "675d579308f2f58f3889458299c0a3d7c9ef827f10210507000c46c514b5a40e"

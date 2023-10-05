@@ -28,6 +28,9 @@ poetry *args: prepare
 clean:
   rm -rf dist/*
 
+build: clean prepare
+  poetry build
+
 publish: clean prepare
   poetry build
   poetry run twine upload dist/extism-*.tar.gz

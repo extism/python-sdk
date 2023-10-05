@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "extism"
-version = "0.5.0"
+version = "0.0.0+replaced-by-ci"
 description = "Extism Host SDK for python"
 authors = ["The Extism Authors <oss@extism.org>"]
 license = "BSD-3-Clause"

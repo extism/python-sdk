@@ -1,4 +1,5 @@
 html
 __pycache__
 poetry-installer-error-*.log
-docs/
+docs/_build
+.DS_Store

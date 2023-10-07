@@ -31,6 +31,9 @@ jobs:
 
       - run: poetry install
 
+      - run: |
+          poetry run mypy --install-types -m extism --non-interactive
+
       - name: Run Python lint
         run: |
           just lint

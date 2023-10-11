@@ -39,10 +39,17 @@ format: prepare
   poetry run black extism/ tests/ example.py
 
 lint: prepare
+  poetry run mypy --check extism/ tests/ example.py
   poetry run black --check extism/ tests/ example.py
 
 docs: prepare
-  poetry run pycco extism/*.py
+  poetry run sphinx-build -b html docs/source docs/_build
+
+serve-docs: docs
+  poetry run python -m http.server 8000 -d docs/_build
+
+watch-docs: prepare
+  watchexec -r -w docs/source -w extism just serve-docs
 
 show-docs: docs
   open docs/extism.html

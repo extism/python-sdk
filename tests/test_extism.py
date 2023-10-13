@@ -103,6 +103,26 @@ class TestExtism(unittest.TestCase):
         res = plugin.call("count_vowels", "aaa")
         self.assertEqual(res, b"hello world: 3 test")
 
+    def test_codecs(self):
+        @extism.host_fn(user_data=b"test")
+        def hello_world(
+            inp: typing.Annotated[
+                str, extism.Codec(lambda xs: xs.decode().replace("o", "u"))
+            ],
+            *user_data
+        ) -> typing.Annotated[
+            str, extism.Codec(lambda xs: xs.replace("u", "a").encode())
+        ]:
+            return inp
+
+        foo = b"bar"
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+        res = plugin.call("count_vowels", "aaa")
+        # Iiiiiii
+        self.assertEqual(res, b'{"caant": 3}')  # stand it, I know you planned it
+
     def test_inferred_pickle_return_param_extism_host_function(self):
         @extism.host_fn(user_data=b"test")
         def hello_world(

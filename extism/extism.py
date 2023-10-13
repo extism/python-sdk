@@ -30,6 +30,20 @@ class Json:
     """
     Typing metadata: indicates that an extism host function parameter (or return value)
     should be encoded (or decoded) using ``json``.
+
+    .. sourcecode:: python
+
+        @extism.host_fn()
+        def load(input: typing.Annotated[dict, extism.Json]):
+            # input will be a dictionary decoded from json input.
+            input.get("hello", None)
+
+        @extism.host_fn()
+        def load(input: int) -> typing.Annotated[dict, extism.Json]:
+            return {
+                'hello': 3
+            }
+
     """
 
     ...
@@ -39,9 +53,49 @@ class Pickle:
     """
     Typing metadata: indicates that an extism host function parameter (or return value)
     should be encoded (or decoded) using ``pickle``.
+
+    .. sourcecode:: python
+
+        class Grimace:
+            ...
+
+        @extism.host_fn()
+        def load(input: typing.Annotated[Grimace, extism.Pickle]):
+            # input will be an instance of Grimace!
+            ...
+
+        @extism.host_fn()
+        def load(input: int) -> typing.Annotated[Grimace, extism.Pickle]:
+            return Grimace()
+
     """
 
     ...
+
+
+class Codec:
+    """
+    Typing metadata: indicates that an extism host function parameter (or return value)
+    should be transformed with the provided function.
+
+    .. sourcecode:: python
+
+        import json
+
+        @extism.host_fn()
+        def load(input: typing.Annotated[str, extism.Codec(lambda inp: inp.decode(encoding = 'shift_jis'))]):
+            # you can accept shift-jis bytes as input!
+            ...
+
+        mojibake_factory = lambda out: out.encode(encoding='utf8').decode(encoding='latin1').encode()
+
+        @extism.host_fn()
+        def load(input: int) -> typing.Annotated[str, extism.Codec(mojibake_factory)]:
+            return "get ready for some mojibake 🎉"
+    """
+
+    def __init__(self, codec):
+        self.codec = codec
 
 
 class Error(Exception):
@@ -197,14 +251,24 @@ def _map_arg(arg_name, xs) -> Tuple[ValType, Callable[[Any, Any], Any]]:
         return (ValType.I32, lambda _, slot: slot.value)
 
     metadata = getattr(xs, "__metadata__", ())
-    if any((item == Json) for item in metadata):
-        return (ValType.I64, lambda plugin, slot: json.loads(plugin.input_string(slot)))
+    for item in metadata:
+        if item == Json:
+            return (
+                ValType.I64,
+                lambda plugin, slot: json.loads(plugin.input_string(slot)),
+            )
 
-    if any((item == Pickle) for item in metadata):
-        return (
-            ValType.I64,
-            lambda plugin, slot: pickle.loads(plugin.input_buffer(slot)),
-        )
+        if item == Pickle:
+            return (
+                ValType.I64,
+                lambda plugin, slot: pickle.loads(plugin.input_bytes(slot)),
+            )
+
+        if isinstance(item, Codec):
+            return (
+                ValType.I64,
+                lambda plugin, slot: item.codec(plugin.input_bytes(slot)),
+            )
 
     raise TypeError("Could not infer input type for argument %s" % arg_name)
 
@@ -229,29 +293,40 @@ def _map_ret(xs) -> List[Tuple[ValType, Callable[[Any, Any, Any], Any]]]:
     if xs == bool:
         return [(ValType.I32, lambda _, slot, value: slot.assign(value))]
 
-    metadata = getattr(xs, "__metadata__", ())
-    if any((item == Json) for item in metadata):
-        return [
-            (
-                ValType.I64,
-                lambda plugin, slot, value: plugin.return_string(
-                    slot, json.dumps(value)
-                ),
-            )
-        ]
-
-    if any((item == Pickle) for item in metadata):
-        return [
-            (
-                ValType.I64,
-                lambda plugin, slot, value: plugin.return_bytes(
-                    slot, pickle.dumps(value)
-                ),
-            )
-        ]
-
     if get_origin(xs) == tuple:
         return functools.reduce(lambda lhs, rhs: lhs + _map_ret(rhs), get_args(xs), [])
+
+    metadata = getattr(xs, "__metadata__", ())
+    for item in metadata:
+        if item == Json:
+            return [
+                (
+                    ValType.I64,
+                    lambda plugin, slot, value: plugin.return_string(
+                        slot, json.dumps(value)
+                    ),
+                )
+            ]
+
+        if item == Pickle:
+            return [
+                (
+                    ValType.I64,
+                    lambda plugin, slot, value: plugin.return_bytes(
+                        slot, pickle.dumps(value)
+                    ),
+                )
+            ]
+
+        if isinstance(item, Codec):
+            return [
+                (
+                    ValType.I64,
+                    lambda plugin, slot, value: plugin.return_bytes(
+                        slot, item.codec(value)
+                    ),
+                )
+            ]
 
     raise TypeError("Could not infer return type")
 

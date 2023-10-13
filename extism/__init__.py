@@ -14,6 +14,7 @@ from .extism import (
     ValType,
     Val,
     CurrentPlugin,
+    Codec,
     Json,
     Pickle,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "Function",
     "ValType",
     "Val",
+    "Codec",
     "Json",
     "Pickle",
 ]

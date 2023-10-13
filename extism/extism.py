@@ -2,12 +2,46 @@ import json
 import os
 from base64 import b64encode
 from cffi import FFI
-from typing import Any, Callable, Dict, List, Union, Literal, Optional
+from typing import (
+    Annotated,
+    get_args,
+    get_origin,
+    get_type_hints,
+    Any,
+    Callable,
+    List,
+    Union,
+    Literal,
+    Optional,
+    Tuple,
+)
 from enum import Enum
 from uuid import UUID
 from extism_sys import lib as _lib, ffi as _ffi  # type: ignore
-from typing import Annotated
 from annotated_types import Gt
+import functools
+import pickle
+
+
+HOST_FN_REGISTRY: List[Any] = []
+
+
+class Json:
+    """
+    Typing metadata: indicates that an extism host function parameter (or return value)
+    should be encoded (or decoded) using ``json``.
+    """
+
+    ...
+
+
+class Pickle:
+    """
+    Typing metadata: indicates that an extism host function parameter (or return value)
+    should be encoded (or decoded) using ``pickle``.
+    """
+
+    ...
 
 
 class Error(Exception):
@@ -17,6 +51,36 @@ class Error(Exception):
     """
 
     ...
+
+
+class ValType(Enum):
+    """
+    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`_.
+    """
+
+    I32 = 0
+    I64 = 1
+    F32 = 2
+    F64 = 3
+    V128 = 4
+    FUNC_REF = 5
+    EXTERN_REF = 6
+
+
+class Val:
+    """
+    Low-level WebAssembly value with associated :py:class:`ValType`.
+    """
+
+    def __init__(self, t: ValType, v):
+        self.t = t
+        self.value = v
+
+    def __repr__(self):
+        return f"Val({self.t}, {self.value})"
+
+    def _assign(self, v):
+        self.value = v
 
 
 class _Base64Encoder(json.JSONEncoder):
@@ -90,6 +154,7 @@ class Function:
             self.user_data = _ffi.new_handle(user_data)
         else:
             self.user_data = _ffi.NULL
+
         self.pointer = _lib.extism_function_new(
             name.encode(),
             args,
@@ -115,6 +180,132 @@ class Function:
             _lib.extism_function_free(self.pointer)
 
 
+def _map_arg(arg_name, xs) -> Tuple[ValType, Callable[[Any, Any], Any]]:
+    if xs == str:
+        return (ValType.I64, lambda plugin, slot: plugin.input_string(slot))
+
+    if xs == bytes:
+        return (ValType.I64, lambda plugin, slot: plugin.input_bytes(slot))
+
+    if xs == int:
+        return (ValType.I64, lambda _, slot: slot.value)
+
+    if xs == float:
+        return (ValType.F64, lambda _, slot: slot.value)
+
+    if xs == bool:
+        return (ValType.I32, lambda _, slot: slot.value)
+
+    metadata = getattr(xs, "__metadata__", ())
+    if any((item == Json) for item in metadata):
+        return (ValType.I64, lambda plugin, slot: json.loads(plugin.input_string(slot)))
+
+    if any((item == Pickle) for item in metadata):
+        return (
+            ValType.I64,
+            lambda plugin, slot: pickle.loads(plugin.input_buffer(slot)),
+        )
+
+    raise TypeError("Could not infer input type for argument %s" % arg_name)
+
+
+def _map_ret(xs) -> List[Tuple[ValType, Callable[[Any, Any, Any], Any]]]:
+    if xs == str:
+        return [
+            (ValType.I64, lambda plugin, slot, value: plugin.return_string(slot, value))
+        ]
+
+    if xs == bytes:
+        return [
+            (ValType.I64, lambda plugin, slot, value: plugin.return_bytes(slot, value))
+        ]
+
+    if xs == int:
+        return [(ValType.I64, lambda _, slot, value: slot.assign(value))]
+
+    if xs == float:
+        return [(ValType.F64, lambda _, slot, value: slot.assign(value))]
+
+    if xs == bool:
+        return [(ValType.I32, lambda _, slot, value: slot.assign(value))]
+
+    metadata = getattr(xs, "__metadata__", ())
+    if any((item == Json) for item in metadata):
+        return [
+            (
+                ValType.I64,
+                lambda plugin, slot, value: plugin.return_string(
+                    slot, json.dumps(value)
+                ),
+            )
+        ]
+
+    if any((item == Pickle) for item in metadata):
+        return [
+            (
+                ValType.I64,
+                lambda plugin, slot, value: plugin.return_bytes(
+                    slot, pickle.dumps(value)
+                ),
+            )
+        ]
+
+    if get_origin(xs) == tuple:
+        return functools.reduce(lambda lhs, rhs: lhs + _map_ret(rhs), get_args(xs), [])
+
+    raise TypeError("Could not infer return type")
+
+
+class ExplicitFunction(Function):
+    def __init__(self, name, namespace, args, returns, func, user_data):
+        self.func = func
+
+        super().__init__(name, args, returns, handle_args, *user_data)
+        if namespace is not None:
+            self.set_namespace(namespace)
+
+        functools.update_wrapper(self, func)
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+
+class TypeInferredFunction(ExplicitFunction):
+    def __init__(self, name, namespace, func, user_data):
+        hints = get_type_hints(func, include_extras=True)
+        if len(hints) == 0:
+            raise TypeError(
+                "Host function must include Python type annotations or explicitly list arguments."
+            )
+
+        arg_names = [arg for arg in hints.keys() if arg != "return"]
+        returns = hints.pop("return", None)
+
+        args = [_map_arg(arg, hints[arg]) for arg in arg_names]
+        returns = [] if returns is None else _map_ret(returns)
+
+        def inner_func(plugin, inputs, outputs, *user_data):
+            inner_args = [
+                extract(plugin, slot) for ((_, extract), slot) in zip(args, inputs)
+            ]
+
+            if user_data is not None:
+                inner_args += list(user_data)
+
+            result = func(*inner_args)
+            for (_, emplace), slot in zip(returns, outputs):
+                emplace(plugin, slot, result)
+
+        super().__init__(
+            name,
+            namespace,
+            [typ for (typ, _) in args],
+            [typ for (typ, _) in returns],
+            inner_func,
+            user_data,
+        )
+
+
 class CancelHandle:
     def __init__(self, ptr):
         self.pointer = ptr
@@ -133,7 +324,8 @@ class Plugin:
     :param config: An optional JSON-serializable object holding a map of configuration keys
                    and values.
     :param functions: An optional list of host :py:class:`functions <.extism.Function>` to
-                      expose to the guest program.
+                      expose to the guest program. Defaults to all registered ``@host_fn()``'s
+                      if not given.
     """
 
     def __init__(
@@ -141,7 +333,7 @@ class Plugin:
         plugin: Union[str, bytes, dict],
         wasi: bool = False,
         config: Optional[Any] = None,
-        functions: Optional[List[Function]] = None,
+        functions: Optional[List[Function]] = HOST_FN_REGISTRY,
     ):
         wasm = _wasm(plugin)
         self.functions = functions
@@ -196,7 +388,7 @@ class Plugin:
         function_name: str,
         data: Union[str, bytes],
         parse: Callable[[Any], Any] = lambda xs: bytes(xs),
-    ):
+    ) -> Any:
         """
         Call a function by name with the provided input data
 
@@ -259,33 +451,6 @@ def _convert_output(x, v):
         x.v.f64 = float(v.value)
     else:
         raise Error("Unsupported return type: " + str(x.t))
-
-
-class ValType(Enum):
-    """
-    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`_.
-    """
-
-    I32 = 0
-    I64 = 1
-    F32 = 2
-    F64 = 3
-    V128 = 4
-    FUNC_REF = 5
-    EXTERN_REF = 6
-
-
-class Val:
-    """
-    Low-level WebAssembly value with associated :py:class:`ValType`.
-    """
-
-    def __init__(self, t: ValType, v):
-        self.t = t
-        self.value = v
-
-    def __repr__(self):
-        return f"Val({self.t}, {self.value})"
 
 
 class CurrentPlugin:
@@ -366,7 +531,7 @@ class CurrentPlugin:
 
         .. sourcecode:: python
 
-           @extism.host_fn
+           @extism.host_fn(signature=([extism.ValType.I64], []))
            def hello_world(plugin, params, results):
                my_str = plugin.input_string(params[0])
                print(my_str)
@@ -407,9 +572,7 @@ class CurrentPlugin:
            with open("example.wasm", "rb") as wasm_file:
                data = wasm_file.read()
 
-           with extism.Plugin(data, functions=[
-               extism.Function("hello_world", [extism.ValType.I64], [], hello_world).with_namespace("example")
-           ]) as plugin:
+           with extism.Plugin(data, functions=[hello_world]) as plugin:
                plugin.call("my_func", "")
 
         :param input: The input value that references a string.
@@ -418,46 +581,124 @@ class CurrentPlugin:
 
 
 def host_fn(
-    func: Union[
-        Any,
-        Callable[[CurrentPlugin, List[Val], List[Val]], List[Val]],
-        Callable[[CurrentPlugin, List[Val], List[Val], Optional[Any]], List[Val]],
-    ]
+    name: Optional[str] = None,
+    namespace: Optional[str] = None,
+    signature: Optional[Tuple[List[ValType], List[ValType]]] = None,
+    user_data: Optional[bytes | List[bytes]] = None,
 ):
     """
-    A decorator for creating host functions, this decorator wraps a function
-    that takes the following parameters:
+    A decorator for creating host functions. Host functions are installed into a thread-local
+    registry.
 
-    - ``current_plugin``: :py:class:`CurrentPlugin <.CurrentPlugin>`
-    - ``inputs``: :py:class:`List[Val] <.Val>`
-    - ``outputs``: :py:class:`List[Val] <.Val>`
-    - ``user_data``: any number of values passed as user data
+    :param name: The function name to expose to the guest plugin. If not given, inferred from the
+                 wrapped function name.
+    :param namespace: The namespace to install the function into; defaults to "env" if not given.
+    :param signature: A tuple of two arrays representing the function parameter types and return value types.
+                      If not given, types will be inferred from ``typing`` annotations.
+    :param userdata: Any custom userdata to associate with the function.
 
-    The function should return a list of `Val`.
+    Supported Inferred Types
+    ------------------------
+
+    - ``typing.Annotated[Any, extism.Json]``: In both parameter and return
+      positions. Written to extism memory; offset encoded in return value as
+      ``I64``.
+    - ``typing.Annotated[Any, extism.Pickle]``: In both parameter and return
+      positions. Written to extism memory; offset encoded in return value as
+      ``I64``.
+    - ``str``, ``bytes``: In both parameter and return
+      positions. Written to extism memory; offset encoded in return value as
+      ``I64``.
+    - ``int``:  In both parameter and return positions. Encoded as ``I64``.
+    - ``float``: In both parameter and return positions. Encoded as ``F64``.
+    - ``bool``: In both parameter and return positions. Encoded as ``I32``.
+    - ``typing.Tuple[<any of the above types>]``: In return position; expands
+      return list to include all member type encodings.
+
+    .. sourcecode:: python
+
+        import typing
+        import extism
+
+        @extism.host_fn()
+        def greet(who: str) -> str:
+            return "hello %s" % who
+
+        @extism.host_fn()
+        def load(input: typing.Annotated[dict, extism.Json]) -> typing.Tuple[int, int]:
+            # input will be a dictionary decoded from json input. The tuple will be returned
+            # two I64 values.
+            return (3, 4)
+
+        @extism.host_fn()
+        def return_many_encoded() -> typing.Tuple(int, typing.Annotated[dict, extism.Json]):
+            # we auto-encoded any Json-annotated return values, even in a tuple
+            return (32, {"hello": "world"})
+
+        class Gromble:
+            ...
+
+        @extism.host_fn()
+        def everyone_loves_a_pickle(grumble: typing.Annotated[Gromble, extism.Pickle]) -> typing.Annotated[Gromble, extism.Pickle]:
+            # you can pass pickled objects in and out of host funcs
+            return Gromble()
+
+        @extism.host_fn(signature=([extism.ValType.I64], []))
+        def more_control(
+            current_plugin: extism.CurrentPlugin,
+            params: typing.List[extism.Val],
+            results: typing.List[extism.Val],
+            *user_data
+        ):
+            # if you need more control, you can specify the wasm-level input
+            # and output types explicitly.
+            ...
+
     """
+    if user_data is None:
+        user_data = []
+    elif isinstance(user_data, bytes):
+        user_data = [user_data]
 
-    @_ffi.callback(
-        "void(ExtismCurrentPlugin*, const ExtismVal*, ExtismSize, ExtismVal*, ExtismSize, void*)"
-    )
-    def handle_args(current, inputs, n_inputs, outputs, n_outputs, user_data):
-        inp = []
-        outp = []
+    def outer(func):
+        n = name or func.__name__
 
-        for i in range(n_inputs):
-            inp.append(_convert_value(inputs[i]))
+        idx = len(HOST_FN_REGISTRY).to_bytes(length=4, byteorder="big")
+        user_data.append(idx)
+        fn = (
+            TypeInferredFunction(n, namespace, func, user_data)
+            if signature is None
+            else ExplicitFunction(
+                n, namespace, signature[0], signature[1], func, user_data
+            )
+        )
+        HOST_FN_REGISTRY.append(fn)
+        return fn
 
-        for i in range(n_outputs):
-            outp.append(_convert_value(outputs[i]))
+    return outer
 
-        cast_func: Any = func
 
-        if user_data == _ffi.NULL:
-            cast_func(CurrentPlugin(current), inp, outp)
-        else:
-            udata = _ffi.from_handle(user_data)
-            cast_func(CurrentPlugin(current), inp, outp, *udata)
+@_ffi.callback(
+    "void(ExtismCurrentPlugin*, const ExtismVal*, ExtismSize, ExtismVal*, ExtismSize, void*)"
+)
+def handle_args(current, inputs, n_inputs, outputs, n_outputs, user_data):
+    inp = []
+    outp = []
 
-        for i in range(n_outputs):
-            _convert_output(outputs[i], outp[i])
+    for i in range(n_inputs):
+        inp.append(_convert_value(inputs[i]))
 
-    return handle_args
+    for i in range(n_outputs):
+        outp.append(_convert_value(outputs[i]))
+
+    if user_data == _ffi.NULL:
+        udata = []
+    else:
+        udata = list(_ffi.from_handle(user_data))
+
+    idx = int.from_bytes(udata.pop(), byteorder="big")
+
+    HOST_FN_REGISTRY[idx](CurrentPlugin(current), inp, outp, *udata)
+
+    for i in range(n_outputs):
+        _convert_output(outputs[i], outp[i])

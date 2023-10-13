@@ -5,18 +5,18 @@ import hashlib
 import pathlib
 
 sys.path.append(".")
-from extism import Function, host_fn, ValType, Plugin, set_log_file
+from extism import Function, host_fn, ValType, Plugin, set_log_file, Json
+from typing import Annotated
 
 set_log_file("stderr", "trace")
 
 
-@host_fn
-def hello_world(plugin, input_, output, a_string):
+@host_fn(user_data=b"Hello again!")
+def hello_world(inp: Annotated[dict, Json], *a_string) -> Annotated[dict, Json]:
     print("Hello from Python!")
     print(a_string)
-    print(input_)
-    print(plugin.input_string(input_[0]))
-    output[0] = input_[0]
+    inp["roundtrip"] = 1
+    return inp
 
 
 # Compare against Python implementation.
@@ -36,16 +36,7 @@ def main(args):
     hash = hashlib.sha256(wasm).hexdigest()
     manifest = {"wasm": [{"data": wasm, "hash": hash}]}
 
-    functions = [
-        Function(
-            "hello_world",
-            [ValType.I64],
-            [ValType.I64],
-            hello_world,
-            "Hello again!",
-        )
-    ]
-    plugin = Plugin(manifest, wasi=True, functions=functions)
+    plugin = Plugin(manifest, wasi=True)
     print(plugin.id)
     # Call `count_vowels`
     wasm_vowel_count = plugin.call("count_vowels", data)
@@ -55,6 +46,7 @@ def main(args):
     print("Number of vowels:", j["count"])
 
     assert j["count"] == count_vowels(data)
+    assert j["roundtrip"] == 1
 
 
 if __name__ == "__main__":

@@ -19,7 +19,18 @@ prepare:
   fi
 
 test: prepare
+  #!/bin/bash
+  set -eou pipefail
   poetry run python -m unittest discover
+
+  set +e
+  msg=$(2>&1 poetry run python example.py)
+  if [ $? != 0 ]; then
+    >&2 echo "$msg"
+    exit 1
+  else
+    echo -e 'poetry run python example.py... \x1b[32mok\x1b[0m'
+  fi
 
 poetry *args: prepare
   #!/bin/bash

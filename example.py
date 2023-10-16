@@ -1,10 +1,10 @@
+# run this using `poetry run python example.py`!
 import sys
 
 import json
 import hashlib
 import pathlib
 
-sys.path.append(".")
 from extism import Function, host_fn, ValType, Plugin, set_log_file, Json
 from typing import Annotated
 

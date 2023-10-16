@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 cffi = "^1.10.0"
-extism-sys = "^0.5.3"
+extism-sys = {version = "^1.0.0rc0", allow-prereleases = true}
 annotated-types = "^0.6.0"
 
 [tool.poetry.dev-dependencies]

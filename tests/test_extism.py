@@ -6,6 +6,17 @@ import time
 from threading import Thread
 from datetime import datetime, timedelta
 from os.path import join, dirname
+import typing
+import pickle
+
+
+# A pickle-able object.
+class Gribble:
+    def __init__(self, v):
+        self.v = v
+
+    def frobbitz(self):
+        return "gromble %s" % self.v
 
 
 class TestExtism(unittest.TestCase):
@@ -55,25 +66,78 @@ class TestExtism(unittest.TestCase):
         )
 
     def test_extism_host_function(self):
-        @extism.host_fn
+        @extism.host_fn(
+            signature=([extism.ValType.I64], [extism.ValType.I64]), user_data=b"test"
+        )
         def hello_world(plugin, params, results, user_data):
             offs = plugin.alloc(len(user_data))
             mem = plugin.memory(offs)
             mem[:] = user_data
             results[0].value = offs.offset
 
-        f = [
-            extism.Function(
-                "hello_world",
-                [extism.ValType.I64],
-                [extism.ValType.I64],
-                hello_world,
-                b"test",
-            )
-        ]
-        plugin = extism.Plugin(self._manifest(functions=True), functions=f, wasi=True)
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
         res = plugin.call("count_vowels", "aaa")
         self.assertEqual(res, b"test")
+
+    def test_inferred_extism_host_function(self):
+        @extism.host_fn(user_data=b"test")
+        def hello_world(inp: str, *user_data) -> str:
+            return "hello world: %s %s" % (inp, user_data[0].decode("utf-8"))
+
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+        res = plugin.call("count_vowels", "aaa")
+        self.assertEqual(res, b'hello world: {"count": 3} test')
+
+    def test_inferred_json_param_extism_host_function(self):
+        @extism.host_fn(user_data=b"test")
+        def hello_world(inp: typing.Annotated[dict, extism.Json], *user_data) -> str:
+            return "hello world: %s %s" % (inp["count"], user_data[0].decode("utf-8"))
+
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+        res = plugin.call("count_vowels", "aaa")
+        self.assertEqual(res, b"hello world: 3 test")
+
+    def test_codecs(self):
+        @extism.host_fn(user_data=b"test")
+        def hello_world(
+            inp: typing.Annotated[
+                str, extism.Codec(lambda xs: xs.decode().replace("o", "u"))
+            ],
+            *user_data
+        ) -> typing.Annotated[
+            str, extism.Codec(lambda xs: xs.replace("u", "a").encode())
+        ]:
+            return inp
+
+        foo = b"bar"
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+        res = plugin.call("count_vowels", "aaa")
+        # Iiiiiii
+        self.assertEqual(res, b'{"caant": 3}')  # stand it, I know you planned it
+
+    def test_inferred_pickle_return_param_extism_host_function(self):
+        @extism.host_fn(user_data=b"test")
+        def hello_world(
+            inp: typing.Annotated[dict, extism.Json], *user_data
+        ) -> typing.Annotated[Gribble, extism.Pickle]:
+            return Gribble("robble")
+
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+        res = plugin.call("count_vowels", "aaa")
+
+        result = pickle.loads(res)
+        self.assertIsInstance(result, Gribble)
+        self.assertEqual(result.frobbitz(), "gromble robble")
 
     def test_extism_plugin_cancel(self):
         plugin = extism.Plugin(self._loop_manifest())

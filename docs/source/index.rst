@@ -1,15 +1,16 @@
-.. Extism documentation master file, created by
-   sphinx-quickstart on Fri Oct  6 12:42:59 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Extism Python Host SDK
+======================
 
-Welcome to Extism's documentation!
-==================================
+This documentation is split into "usage" and "reference" documentation. If
+you're just getting started with Extism, check out the :ref:`getting started
+<getting_started>` docs. On the other hand, if you've got a specific question
+about a specific API, check out the :ref:`api <api>` docs.
 
 Contents
 --------
 
 .. toctree::
+   :maxdepth: 1
 
    usage
    api

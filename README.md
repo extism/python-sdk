@@ -57,8 +57,8 @@ If you need support for a different platform or architecture, please [let us kno
 
 Check out the docs:
 
-- [Getting Started](https://extism.readthedocs.org/en/latest/)
-- [API docs](https://extism.readthedocs.org/en/latest/)
+- [Getting Started](https://extism.readthedocs.io/en/latest/usage.html)
+- [API docs](https://extism.readthedocs.io/en/latest/api.html)
 
 ## Development
 

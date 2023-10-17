@@ -394,7 +394,24 @@ class Plugin:
     Plugins are used to call WASM functions. Plugins can kept in a context for
     as long as you need. They may be freed with the ``del`` keyword.
 
-    :param plugin: The path to the logfile
+    .. sourcecode:: python
+
+        import extism
+
+        with extism.Plugin({
+            # all three of these wasm modules will be instantiated and their exported functions
+            # made available to the `plugin` variable below.
+            wasm: [
+                { 'url': 'https://example.com/path/to/module.wasm' }
+                { 'data': b'\\xde\\xad\\xbe\\xef' } # byte content representing a wasm module
+                { 'url': 'https://example.com/path/to/module.wasm', hash: 'cafebeef' } # check that the downloaded module matches a specified sha256 hash.
+            ],
+        }) as plugin:
+            plugin.call("example-function")
+
+    :param plugin: Plugin data, passed as bytes representing a single WebAssembly module,
+                   a string representing a serialized JSON `Manifest <https://extism.org/docs/concepts/manifest/>`_, or
+                   a dict respresenting a deserialized `Manifest <https://extism.org/docs/concepts/manifest/>`_.
     :param wasi: Indicates whether WASI preview 1 support will be enabled for this plugin.
     :param config: An optional JSON-serializable object holding a map of configuration keys
                    and values.

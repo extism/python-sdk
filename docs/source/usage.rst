@@ -204,11 +204,11 @@ Guest Code
     (module
         (; code between winking-emoji parenthesis is a WAT comment! ;)
 
-        (import "env" "hello_world" (func $hello (param i64) (result i64)))
-        (import "env" "extism_alloc" (func $extism_alloc (param i64) (result i64)))
-        (import "env" "extism_store_u8" (func $extism_store_u8 (param i64 i32)))
-        (import "env" "extism_output_set" (func $extism_output_set (param i64 i64)))
-        (import "env" "extism_length" (func $extism_length (param i64) (result i64)))
+        (import "extism:host/user" "hello_world" (func $hello (param i64) (result i64)))
+        (import "extism:host/env" "alloc" (func $extism_alloc (param i64) (result i64)))
+        (import "extism:host/env" "store_u8" (func $extism_store_u8 (param i64 i32)))
+        (import "extism:host/env" "output_set" (func $extism_output_set (param i64 i64)))
+        (import "extism:host/env" "length" (func $extism_length (param i64) (result i64)))
 
         (; store a string to send to the host. ;)
         (memory $memory (export "mem")

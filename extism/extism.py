@@ -2,8 +2,8 @@ import json
 import os
 from base64 import b64encode
 from cffi import FFI
+import typing
 from typing import (
-    Annotated,
     get_args,
     get_origin,
     get_type_hints,
@@ -347,7 +347,11 @@ class ExplicitFunction(Function):
 
 class TypeInferredFunction(ExplicitFunction):
     def __init__(self, name, namespace, func, user_data):
-        hints = get_type_hints(func, include_extras=True)
+        kwargs: dict[str, Any] = {}
+        if hasattr(typing, "Annotated"):
+            kwargs["include_extras"] = True
+
+        hints = get_type_hints(func, **kwargs)
         if len(hints) == 0:
             raise TypeError(
                 "Host function must include Python type annotations or explicitly list arguments."
@@ -565,7 +569,7 @@ class CurrentPlugin:
             return None
         return _ffi.buffer(p + mem.offset, mem.length)
 
-    def alloc(self, size: Annotated[int, Gt(-1)]) -> Memory:
+    def alloc(self, size: int) -> Memory:
         """
         Allocate a new block of memory.
 
@@ -676,7 +680,7 @@ def host_fn(
     name: Optional[str] = None,
     namespace: Optional[str] = None,
     signature: Optional[Tuple[List[ValType], List[ValType]]] = None,
-    user_data: Optional[bytes | List[bytes]] = None,
+    user_data: Optional[Union[bytes, List[bytes]]] = None,
 ):
     """
     A decorator for creating host functions. Host functions are installed into a thread-local

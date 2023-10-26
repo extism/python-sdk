@@ -93,6 +93,9 @@ class TestExtism(unittest.TestCase):
         self.assertEqual(res, b'hello world: {"count": 3} test')
 
     def test_inferred_json_param_extism_host_function(self):
+        if not hasattr(typing, "Annotated"):
+            return
+
         @extism.host_fn(user_data=b"test")
         def hello_world(inp: typing.Annotated[dict, extism.Json], *user_data) -> str:
             return "hello world: %s %s" % (inp["count"], user_data[0].decode("utf-8"))
@@ -104,6 +107,9 @@ class TestExtism(unittest.TestCase):
         self.assertEqual(res, b"hello world: 3 test")
 
     def test_codecs(self):
+        if not hasattr(typing, "Annotated"):
+            return
+
         @extism.host_fn(user_data=b"test")
         def hello_world(
             inp: typing.Annotated[
@@ -124,6 +130,9 @@ class TestExtism(unittest.TestCase):
         self.assertEqual(res, b'{"caant": 3}')  # stand it, I know you planned it
 
     def test_inferred_pickle_return_param_extism_host_function(self):
+        if not hasattr(typing, "Annotated"):
+            return
+
         @extism.host_fn(user_data=b"test")
         def hello_world(
             inp: typing.Annotated[dict, extism.Json], *user_data

@@ -9,7 +9,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 cffi = "^1.10.0"
-extism-sys = {version = "^1.0.0rc0", allow-prereleases = true}
+# extism-sys = {version = "^1.0.0rc0", allow-prereleases = true}
+extism-sys = {git = "https://github.com/extism/extism", subdirectory="extism-maturin"}
 annotated-types = "^0.6.0"
 
 [tool.poetry.dev-dependencies]

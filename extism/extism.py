@@ -636,8 +636,8 @@ class CurrentPlugin:
            # example.wat = \"""
            # (module
            #     (import "example" "hello_world" (func $hello (param i64)))
-           #     (import "env" "extism_alloc" (func $extism_alloc (param i64) (result i64)))
-           #     (import "env" "extism_store_u8" (func $extism_store_u8 (;6;) (param i64 i32)))
+           #     (import "extism:host/env" "alloc" (func $extism_alloc (param i64) (result i64)))
+           #     (import "extism:host/env" "store_u8" (func $extism_store_u8 (;6;) (param i64 i32)))
            #
            #     (memory $memory (export "mem")
            #       (data "Hello from WAT!\00")
@@ -688,7 +688,7 @@ def host_fn(
 
     :param name: The function name to expose to the guest plugin. If not given, inferred from the
                  wrapped function name.
-    :param namespace: The namespace to install the function into; defaults to "env" if not given.
+    :param namespace: The namespace to install the function into; defaults to "extism:host/user" if not given.
     :param signature: A tuple of two arrays representing the function parameter types and return value types.
                       If not given, types will be inferred from ``typing`` annotations.
     :param userdata: Any custom userdata to associate with the function.

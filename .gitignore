@@ -3,3 +3,4 @@ __pycache__
 poetry-installer-error-*.log
 docs/_build
 .DS_Store
+dist/

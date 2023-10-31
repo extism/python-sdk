@@ -7,10 +7,8 @@ your Python application host to run Extism WebAssembly guest plug-ins.
 > **Note**: :warning: This repo is 1.0 alpha version of the Python SDK and is a work in
 > progress. :warning:
 >
-> We'd love any feedback you have on it, but consider using the supported
-> python SDK in
-> [extism/extism](https://github.com/extism/extism/tree/main/python) until we
-> hit 1.0.
+> This is safe and recommended to use for a new integration, however we may
+> push breaking changes until we hit 1.0 in December, 2023.
 
 ```python
 import extism

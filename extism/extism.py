@@ -109,10 +109,13 @@ class Error(Exception):
 
 class ValType(Enum):
     """
-    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`_.
+    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`.
+
+    `PTR` is an alias for `I64` to make typing a little less confusing when writing host function definitions
     """
 
     I32 = 0
+    PTR = 1
     I64 = 1
     F32 = 2
     F64 = 3

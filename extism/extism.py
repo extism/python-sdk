@@ -630,7 +630,7 @@ class CurrentPlugin:
 
         .. sourcecode:: python
 
-           @extism.host_fn(signature=([extism.ValType.I64], []))
+           @extism.host_fn(signature=([extism.ValType.PTR], []))
            def hello_world(plugin, params, results):
                my_str = plugin.input_string(params[0])
                print(my_str)
@@ -742,7 +742,7 @@ def host_fn(
             # you can pass pickled objects in and out of host funcs
             return Gromble()
 
-        @extism.host_fn(signature=([extism.ValType.I64], []))
+        @extism.host_fn(signature=([extism.ValType.PTR], []))
         def more_control(
             current_plugin: extism.CurrentPlugin,
             params: typing.List[extism.Val],

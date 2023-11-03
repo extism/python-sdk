@@ -109,10 +109,13 @@ class Error(Exception):
 
 class ValType(Enum):
     """
-    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`_.
+    An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`.
+
+    `PTR` is an alias for `I64` to make typing a little less confusing when writing host function definitions
     """
 
     I32 = 0
+    PTR = 1
     I64 = 1
     F32 = 2
     F64 = 3
@@ -627,7 +630,7 @@ class CurrentPlugin:
 
         .. sourcecode:: python
 
-           @extism.host_fn(signature=([extism.ValType.I64], []))
+           @extism.host_fn(signature=([extism.ValType.PTR], []))
            def hello_world(plugin, params, results):
                my_str = plugin.input_string(params[0])
                print(my_str)
@@ -739,7 +742,7 @@ def host_fn(
             # you can pass pickled objects in and out of host funcs
             return Gromble()
 
-        @extism.host_fn(signature=([extism.ValType.I64], []))
+        @extism.host_fn(signature=([extism.ValType.PTR], []))
         def more_control(
             current_plugin: extism.CurrentPlugin,
             params: typing.List[extism.Val],

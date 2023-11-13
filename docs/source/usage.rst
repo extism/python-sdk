@@ -35,11 +35,7 @@ module:
     manifest = {
         "wasm": [
             {
-                "url": "https://github.com/extism/plugins/releases/download/v0.3.0/count_vowels.wasm",
-                # Note the hash! We use this to ensure that the remote file matches what we expect.
-                # If the remote version changes, the plugin will raise an `extism.Error` when we try
-                # to construct it.
-                "hash": "cf29364cb62d3bc4de8654b187fae9cf50174634760eb995b1745650e7a38b41"
+                "url": "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm",
             }
         ]
     }

@@ -111,11 +111,10 @@ We can also statically configure values for use by the guest:
     :linenos:
     :lineno-start: 15
 
-    with extism.Plugin(manifest, wasi=True) as plugin:
+    with extism.Plugin(manifest, wasi=True, config = {'vowels': 'h'}) as plugin:
         print(plugin.call(
             "count_vowels",
             "hello world",
-            config = {'vowels': 'h'}
             parse = lambda output: json.loads(
               bytes(output).decode('utf-8')
             )

@@ -209,11 +209,11 @@ Guest Code
         (memory $memory (export "mem")
           (data "{\"message\": \"Hello from WAT!\"}\00")
         )
-        (func $my_func (result i64)
+        (func $my_func (result i32)
           (local $result i64)
           (local $offset i64)
           (local $i i32)
-          (local.set $offset (call $extism_alloc (i64.const 15)))
+          (local.set $offset (call $extism_alloc (i64.const 31)))
 
           (;
             You can read this as:
@@ -242,7 +242,6 @@ Guest Code
           )
 
           (; call the host and store the resulting offset into extism memory in a local variable. ;)
-          local.get $offset
           (local.set $result (call $hello (local.get $offset)))
 
           (;
@@ -253,7 +252,8 @@ Guest Code
             (local.get $result)
             (call $extism_length (local.get $result))
           )
+
+          (i32.const 0)
         )
         (export "my_func" (func $my_func))
     )
-

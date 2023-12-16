@@ -163,6 +163,45 @@ def set_log_file(
     _lib.extism_log_file(file.encode(), c_level)
 
 
+class CustomLogger:
+    def __init__(self, f):
+        self.callback = None
+        self.set_callback(f)
+
+    def set_callback(self, f):
+        @_ffi.callback("void(char*, ExtismSize)")
+        def callback(ptr, len):
+            f(_ffi.string(ptr, len).decode())
+
+        self.callback = callback
+
+    def drain(self):
+        if self.callback is not None:
+            _lib.extism_log_drain(self.callback)
+
+    def __del__(self):
+        self.drain()
+
+
+def set_log_custom(
+    f, level: Optional[Literal["debug", "error", "trace", "warn"]] = None
+):
+    """
+    Enables buffered logging, this is a global configuration
+
+    :param f: The callback function, takes a string argument and no return value.
+    :param level: The debug level.
+
+    :returns: a CustomLogger with a `drain` method that can be used to handle the buffered logs.
+    """
+    c_level = level or _ffi.NULL
+    if isinstance(level, str):
+        c_level = level.encode()
+
+    _lib.extism_log_custom(c_level)
+    return CustomLogger(f)
+
+
 def extism_version() -> str:
     """
     Gets the Extism version string

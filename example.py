@@ -5,10 +5,8 @@ import json
 import hashlib
 import pathlib
 
-from extism import Function, host_fn, ValType, Plugin, set_log_file, Json
+from extism import Function, host_fn, ValType, Plugin, set_log_custom, Json
 from typing import Annotated
-
-set_log_file("stderr", "trace")
 
 
 @host_fn(user_data=b"Hello again!")
@@ -25,7 +23,8 @@ def count_vowels(data):
 
 
 def main(args):
-    set_log_file("stderr", "trace")
+    logs = []
+    logBuffer = set_log_custom(lambda s: logs.append(s.strip()), "trace")
     if len(args) > 1:
         data = args[1].encode()
     else:
@@ -47,6 +46,12 @@ def main(args):
 
     assert j["count"] == count_vowels(data)
     assert j["roundtrip"] == 1
+
+    # Drain logs and print
+    logBuffer.drain()
+    print("Dumping logs", len(logs))
+    for line in logs:
+        print(line)
 
 
 if __name__ == "__main__":

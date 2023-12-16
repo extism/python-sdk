@@ -169,7 +169,7 @@ class CustomLogger:
         self.set_callback(f)
 
     def set_callback(self, f):
-        @_ffi.callback("void(char*, unsigned long long)")
+        @_ffi.callback("void(char*, ExtismSize)")
         def callback(ptr, len):
             f(_ffi.string(ptr, len).decode())
 

@@ -4,12 +4,6 @@ This repo contains the Python package for integrating with the
 [Extism](https://extism.org/) Webassembly framework. Install this library into
 your Python application host to run Extism WebAssembly guest plug-ins.
 
-> **Note**: :warning: This repo is 1.0 alpha version of the Python SDK and is a work in
-> progress. :warning:
->
-> This is safe and recommended to use for a new integration, however we may
-> push breaking changes until we hit 1.0 in December, 2023.
-
 ```python
 import extism
 import json
@@ -30,10 +24,10 @@ Install this package from [PyPI](https://pypi.org/project/extism/):
 
 ```shell
 # using pip
-$ pip install extism==1.0.0rc0 --pre
+$ pip install extism==1.0.0
 
 # using poetry
-$ poetry add extism=^1.0.0rc0 --allow-prereleases
+$ poetry add extism=^1.0.0
 ```
 
 The `extism` package should install an appropriate `extism_sys` dependency

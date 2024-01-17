@@ -19,6 +19,18 @@ class Gribble:
         return "gromble %s" % self.v
 
 
+class Typed(extism.TypedPlugin):
+    def count_vowels(input: str) -> typing.Annotated[str, extism.Json]:
+        pass
+
+
+class TypedIntCodec(extism.TypedPlugin):
+    def count_vowels(
+        input: str,
+    ) -> typing.Annotated[str, extism.Codec(lambda x: json.loads(x[:])["count"])]:
+        pass
+
+
 class TestExtism(unittest.TestCase):
     def test_call_plugin(self):
         plugin = extism.Plugin(self._manifest())
@@ -158,6 +170,18 @@ class TestExtism(unittest.TestCase):
 
         Thread(target=cancel, args=[cancel_handle]).run()
         self.assertRaises(extism.Error, lambda: plugin.call("infinite_loop", b""))
+
+    def test_typed_plugin(self):
+        t = Typed(extism.Plugin(self._count_vowels_wasm(), wasi=True))
+        res = t.count_vowels("foobar")
+        self.assertEqual(type(res), dict)
+        self.assertEqual(res, {"count": 3, "total": 3, "vowels": "aeiouAEIOU"})
+
+    def test_typed_plugin_codec(self):
+        t = TypedIntCodec(extism.Plugin(self._count_vowels_wasm(), wasi=True))
+        res = t.count_vowels("foobar")
+        self.assertEqual(type(res), int)
+        self.assertEqual(res, 3)
 
     def _manifest(self, functions=False):
         wasm = self._count_vowels_wasm(functions)

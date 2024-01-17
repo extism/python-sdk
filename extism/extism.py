@@ -21,6 +21,7 @@ from extism_sys import lib as _lib, ffi as _ffi  # type: ignore
 from annotated_types import Gt
 import functools
 import pickle
+import inspect
 
 
 HOST_FN_REGISTRY: List[Any] = []
@@ -840,3 +841,102 @@ def handle_args(current, inputs, n_inputs, outputs, n_outputs, user_data):
 
     for i in range(n_outputs):
         _convert_output(outputs[i], outp[i])
+
+
+def _get_typed_plugin_parser(xs):
+    string = lambda x: x[:].decode()
+    if xs == str:
+        return string
+
+    if xs == bytes:
+        return lambda x: x[:]
+
+    metadata = getattr(xs, "__metadata__", ())
+    for item in metadata:
+        if item == Json:
+            return lambda x: json.loads(x[:])
+
+        if item == Pickle:
+            return lambda x: pickle.loads(x[:])
+
+        if isinstance(item, Codec):
+            return lambda x: item.codec(x[:])
+
+    raise TypeError("Could not infer return type")
+
+
+def _get_typed_plugin_encoder(xs):
+    if xs == str:
+        return lambda x: x
+
+    if xs == bytes:
+        return lambda x: x
+
+    metadata = getattr(xs, "__metadata__", ())
+    for item in metadata:
+        if item == Json:
+            return lambda x: json.dumps(x)
+
+        if item == Pickle:
+            return lambda x: pickle.dumps(x)
+
+        if isinstance(item, Codec):
+            return lambda x: item.codec(x[:])
+
+    raise TypeError("Could not infer input type")
+
+
+class TypedPlugin:
+    """
+    Allows plugins to be defined as classes that get transformed into Plugin function calls
+    """
+
+    plugin: Plugin
+
+    def __init__(self, plugin):
+        """
+        Initialize a typed plugin, this will check all the class methods function names to make sure
+        they're registered. Since this wraps `Plugin.call` the behavior is the same when the method is
+        untyped, however type annotations can be included to specify a particular encoding.
+
+        :param plugin: An extisting plugin object
+        """
+        self.plugin = plugin
+
+        # Wrap methods
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for name, m in methods:
+            if name == "__init__":
+                continue
+
+            if not plugin.function_exists(name):
+                raise Error(f"Function not found in {self.__class__.__name__}: {name}")
+
+            hints = get_type_hints(m, include_extras=True)
+            if len(hints) > 2:
+                raise Error(
+                    f"TypedPlugin methods should take a single input parameter, there are {hints.len()} in {name}"
+                )
+
+            parse_return = _get_typed_plugin_parser(hints["return"])
+            encode_input = lambda x: x
+
+            n = 0
+            for k, v in hints.items():
+                if k == "return":
+                    continue
+                n += 1
+                encode = _get_typed_plugin_encoder(v)
+            if n == 0:
+
+                def func(input):
+                    return self.plugin.call(name, b"", parse=parse_return)
+
+            else:
+
+                def func(input):
+                    return self.plugin.call(
+                        name, encode_input(input), parse=parse_return
+                    )
+
+            self.__setattr__(name, func)

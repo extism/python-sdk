@@ -20,12 +20,13 @@ class Gribble:
 
 
 class Typed(extism.TypedPlugin):
-    def count_vowels(input: str) -> typing.Annotated[str, extism.Json]:
+    def count_vowels(self, input: str) -> typing.Annotated[str, extism.Json]:
         pass
 
 
 class TypedIntCodec(extism.TypedPlugin):
     def count_vowels(
+        self,
         input: str,
     ) -> typing.Annotated[str, extism.Codec(lambda x: json.loads(x[:])["count"])]:
         pass
@@ -182,6 +183,11 @@ class TestExtism(unittest.TestCase):
         res = t.count_vowels("foobar")
         self.assertEqual(type(res), int)
         self.assertEqual(res, 3)
+
+    def test_failed_typed_plugin(self):
+        self.assertRaises(
+            extism.Error, lambda: TypedIntCodec(self._loop_manifest(), wasi=True)
+        )
 
     def _manifest(self, functions=False):
         wasm = self._count_vowels_wasm(functions)

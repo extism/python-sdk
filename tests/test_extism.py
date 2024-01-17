@@ -178,7 +178,7 @@ class TestExtism(unittest.TestCase):
         self.assertEqual(res, {"count": 3, "total": 3, "vowels": "aeiouAEIOU"})
 
     def test_typed_plugin_codec(self):
-        t = TypedIntCodec(extism.Plugin(self._count_vowels_wasm(), wasi=True))
+        t = TypedIntCodec(self._count_vowels_wasm(), wasi=True)
         res = t.count_vowels("foobar")
         self.assertEqual(type(res), int)
         self.assertEqual(res, 3)

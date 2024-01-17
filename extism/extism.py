@@ -893,15 +893,18 @@ class TypedPlugin:
 
     plugin: Plugin
 
-    def __init__(self, plugin):
+    def __init__(self, *args, **kw):
         """
         Initialize a typed plugin, this will check all the class methods function names to make sure
         they're registered. Since this wraps `Plugin.call` the behavior is the same when the method is
         untyped, however type annotations can be included to specify a particular encoding.
 
-        :param plugin: An extisting plugin object
+        :param plugin: An extisting plugin object or parameters to be forwarded to `Plugin.__init__`
         """
-        self.plugin = plugin
+        if len(args) > 0 and isinstance(args[0], Plugin):
+            self.plugin = args[0]
+        else:
+            self.plugin = Plugin(*args, **kw)
 
         # Wrap methods
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
@@ -909,7 +912,7 @@ class TypedPlugin:
             if name == "__init__":
                 continue
 
-            if not plugin.function_exists(name):
+            if not self.plugin.function_exists(name):
                 raise Error(f"Function not found in {self.__class__.__name__}: {name}")
 
             hints = get_type_hints(m, include_extras=True)

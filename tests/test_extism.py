@@ -21,15 +21,15 @@ class Gribble:
 
 class Typed(extism.TypedPlugin):
     def count_vowels(self, input: str) -> typing.Annotated[str, extism.Json]:
-        pass
+        raise NotImplementedError
 
 
 class TypedIntCodec(extism.TypedPlugin):
     def count_vowels(
         self,
         input: str,
-    ) -> typing.Annotated[str, extism.Codec(lambda x: json.loads(x[:])["count"])]:
-        pass
+    ) -> typing.Annotated[int, extism.Codec(lambda x: json.loads(x[:])["count"])]:
+        raise NotImplementedError
 
 
 class TestExtism(unittest.TestCase):

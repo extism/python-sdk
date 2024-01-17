@@ -918,7 +918,7 @@ class TypedPlugin:
             hints = get_type_hints(m, include_extras=True)
             if len(hints) > 2:
                 raise Error(
-                    f"TypedPlugin methods should take a single input parameter, there are {hints.len()} in {name}"
+                    f"TypedPlugin methods should take a single input parameter, there are {len(hints)} in {name}"
                 )
 
             parse_return = _get_typed_plugin_parser(hints["return"])

@@ -20,6 +20,11 @@ from .extism import (
     Pickle,
 )
 
+from .pool import (
+    Pool,
+    PoolPlugin
+)
+
 __all__ = [
     "Plugin",
     "Error",
@@ -36,4 +41,6 @@ __all__ = [
     "Codec",
     "Json",
     "Pickle",
+    "Pool",
+    "PoolPlugin",
 ]

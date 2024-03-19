@@ -30,21 +30,29 @@ class PoolError(Exception):
     pass
 
 class Pool:
-    plugins: Dict[str, Callable[[], Plugin]]
-    instances: Dict[str, List[PoolPlugin]]
+    _plugins: Dict[str, Callable[[], Plugin]]
+    _instances: Dict[str, List[PoolPlugin]]
+    _locks: Dict[str, Lock]
 
     def __init__(self, max_instances=1):
         self.max_instances = max_instances
-        self.instances = {}
-        self.plugins = {}
-        self.count = {}
+        self._instances = {}
+        self._locks = {}
+        self._plugins = {}
 
     def add(self, name, source: Callable[[], Plugin]):
-        self.plugins[name] = source
-        self.instances[name] = []
+        self._plugins[name] = source
+        self._instances[name] = []
+        self._locks[name] = Lock()
 
-    def find_available(self, name):
-        entry = self.instances[name]
+    def count(self, name):
+        self._locks[name].acquire()
+        n = len(self._instances[name])
+        self._locks[name].release()
+        return n
+
+    def _find_available(self, name):
+        entry = self._instances[name]
         for instance in entry:
             if not instance.active:
                 return instance.make_active()
@@ -52,28 +60,37 @@ class Pool:
 
     async def async_get(self, name, timeout=None):
         start = time.time()
-        entry = self.instances[name]
-
-        p = self.find_available(name)
-        if p is not None:
-            return p
-        
-        if len(entry) < self.max_instances:
-            p = PoolPlugin(self.plugins[name](), active=True)
-            entry.append(p)
-            self.instances[name] = entry
-            return p
-
-        while True:
-            p = self.find_available(name)
+        entry = self._instances[name]
+        lock = self._locks[name]
+        lock.acquire()
+        try:
+            p = self._find_available(name)
             if p is not None:
+                lock.release()
                 return p
-            else:
-                if timeout is None:
-                    await asyncio.sleep(0)
-                    continue
-                elif (time.time() - start) >= timeout:
-                    raise PoolError("Timed out getting instance for key " + name)
+        
+            if len(entry) < self.max_instances:
+                p = PoolPlugin(self._plugins[name](), active=True)
+                entry.append(p)
+                self._instances[name] = entry
+                lock.release()
+                return p
+
+            while True:
+                p = self._find_available(name)
+                if p is not None:
+                    lock.release()
+                    return p
+                else:
+                    if timeout is None:
+                        await asyncio.sleep(0)
+                        continue
+                    elif (time.time() - start) >= timeout:
+                        lock.release()
+                        raise PoolError("Timed out getting instance for key " + name)
+        except Exception as exc:
+            lock.release()
+            raise exc
 
     def get(self, name, timeout=None):
         fut = self.async_get(name, timeout) 

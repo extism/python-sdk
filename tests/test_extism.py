@@ -183,3 +183,76 @@ def read_test_wasm(p):
     path = join(dirname(__file__), "..", "wasm", p)
     with open(path, "rb") as wasm_file:
         return wasm_file.read()
+
+    
+# pool = Pool(max_instances=5)
+# manifest = {'wasm': [{'path': 'code.wasm'}]}
+# pool.add('test', lambda: Plugin(manifest, wasi=True))
+
+# def run_test(sleep, input):
+#     with pool.get('test') as plugin:
+#         time.sleep(sleep)
+#         print(plugin.call('count_vowels', input))
+
+# def test_thread(sleep, input):
+#     t = Thread(target=run_test, args=[sleep, input])
+#     t.start()
+#     return t
+
+# threads = [
+#     test_thread(1, 'aaa'),
+#     test_thread(1, 'aaa'),
+#     test_thread(1, 'aaa'),
+#     test_thread(1, 'aaa'),
+#     test_thread(1, 'aaa'),
+#     test_thread(1, 'aaa'),
+#     test_thread(2, ''),
+#     test_thread(2, ''),
+#     test_thread(2, ''),
+#     test_thread(2, ''),
+#     test_thread(2, ''),
+#     test_thread(2, ''),
+#     test_thread(0, 'abc'),
+#     test_thread(0, 'abc'),
+#     test_thread(0, 'abc'),
+#     test_thread(0, 'abc'),
+#     test_thread(0, 'abc'),
+#     test_thread(0, 'abc'),
+# ]
+
+# for t in threads:
+#     t.join()
+
+# async def test_async_inner(sleep, input):
+#     with await pool.get('test') as plugin:
+#         await asyncio.sleep(sleep)
+#         print(plugin.call('count_vowels', input))
+
+# async def test_async(*args):
+#     await asyncio.create_task(test_async_inner(*args))
+
+# futures = [
+#     test_async(1, 'aaa'),
+#     test_async(1, 'aaa'),
+#     test_async(1, 'aaa'),
+#     test_async(1, 'aaa'),
+#     test_async(1, 'aaa'),
+#     test_async(1, 'aaa'),
+#     test_async(2, ''),
+#     test_async(2, ''),
+#     test_async(2, ''),
+#     test_async(2, ''),
+#     test_async(2, ''),
+#     test_async(2, ''),
+#     test_async(0, 'abc'),
+#     test_async(0, 'abc'),
+#     test_async(0, 'abc'),
+#     test_async(0, 'abc'),
+#     test_async(0, 'abc'),
+#     test_async(0, 'abc'),
+# ]
+
+# async def main():
+#     await asyncio.gather(*futures)
+
+# asyncio.get_event_loop().run_until_complete(main())

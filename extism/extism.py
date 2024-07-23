@@ -507,10 +507,10 @@ class Plugin:
         return CancelHandle(_lib.extism_plugin_cancel_handle(self.plugin))
 
     def _check_error(self, rc):
+        error = _lib.extism_plugin_error(self.plugin)
+        if error != _ffi.NULL:
+            raise Error(_ffi.string(error).decode())
         if rc != 0:
-            error = _lib.extism_plugin_error(self.plugin)
-            if error != _ffi.NULL:
-                raise Error(_ffi.string(error).decode())
             raise Error(f"Error code: {rc}")
 
     def function_exists(self, name: str) -> bool:

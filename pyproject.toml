@@ -1,3 +1,12 @@
+[project]
+authors = [{ email = "oss@extism.org", name = "The Extism Authors" }]
+name = "extism"
+version = "0.0.0+replaced-by-ci"
+description = "Extism Host SDK for python"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["extism-sys>=1.9.0"]
+
 [tool.poetry]
 name = "extism"
 version = "0.0.0+replaced-by-ci"
@@ -9,7 +18,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 cffi = "^1.10.0"
-extism-sys = {version = "^1.0.0rc7", allow-prereleases = true}
+extism-sys = { version = ">=1.9.0" }
 annotated-types = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
@@ -25,3 +34,12 @@ mypy = "^1.5.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+  "black>=24.10.0",
+  "mypy>=1.13.0",
+  "sphinx-autodoc-typehints>=2.5.0",
+  "sphinx-rtd-theme>=3.0.2",
+  "sphinx>=8.1.3",
+]

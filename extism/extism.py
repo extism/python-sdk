@@ -1,7 +1,6 @@
 import json
 import os
 from base64 import b64encode
-from cffi import FFI
 import typing
 from typing import (
     get_args,
@@ -18,7 +17,6 @@ from typing import (
 from enum import Enum
 from uuid import UUID
 from extism_sys import lib as _lib, ffi as _ffi  # type: ignore
-from annotated_types import Gt
 import functools
 import pickle
 
@@ -242,32 +240,32 @@ class Function:
     A host function.
     """
 
-    def __init__(self, name: str, args, returns, f, *user_data):
-        self.pointer = None
-        args = [a.value for a in args]
-        returns = [r.value for r in returns]
+    def __init__(self, namespace: str | None, name: str, args, returns, f, *user_data):
+        self.namespace = namespace
+        self.name = name
+        self.args = [a.value for a in args]
+        self.returns = [r.value for r in returns]
         if len(user_data) > 0:
             self.user_data = _ffi.new_handle(user_data)
         else:
             self.user_data = _ffi.NULL
+        self.f = f
 
+
+class _ExtismFunctionMetadata:
+    def __init__(self, f: Function):
         self.pointer = _lib.extism_function_new(
-            name.encode(),
-            args,
-            len(args),
-            returns,
-            len(returns),
-            f,
-            self.user_data,
+            f.name.encode(),
+            f.args,
+            len(f.args),
+            f.returns,
+            len(f.returns),
+            f.f,
+            f.user_data,
             _ffi.NULL,
         )
-
-    def set_namespace(self, name: str):
-        _lib.extism_function_set_namespace(self.pointer, name.encode())
-
-    def with_namespace(self, name: str):
-        self.set_namespace(name)
-        return self
+        if f.namespace is not None:
+            _lib.extism_function_set_namespace(self.pointer, f.namespace.encode())
 
     def __del__(self):
         if not hasattr(self, "pointer"):
@@ -374,12 +372,10 @@ def _map_ret(xs) -> List[Tuple[ValType, Callable[[Any, Any, Any], Any]]]:
 
 
 class ExplicitFunction(Function):
-    def __init__(self, name, namespace, args, returns, func, user_data):
+    def __init__(self, namespace, name, args, returns, func, user_data):
         self.func = func
 
-        super().__init__(name, args, returns, handle_args, *user_data)
-        if namespace is not None:
-            self.set_namespace(namespace)
+        super().__init__(namespace, name, args, returns, handle_args, *user_data)
 
         functools.update_wrapper(self, func)
 
@@ -388,7 +384,7 @@ class ExplicitFunction(Function):
 
 
 class TypeInferredFunction(ExplicitFunction):
-    def __init__(self, name, namespace, func, user_data):
+    def __init__(self, namespace, name, func, user_data):
         kwargs: dict[str, Any] = {}
         if hasattr(typing, "Annotated"):
             kwargs["include_extras"] = True
@@ -418,8 +414,8 @@ class TypeInferredFunction(ExplicitFunction):
                 emplace(plugin, slot, result)
 
         super().__init__(
-            name,
             namespace,
+            name,
             [typ for (typ, _) in args],
             [typ for (typ, _) in returns],
             inner_func,
@@ -475,11 +471,12 @@ class Plugin:
     ):
         wasm = _wasm(plugin)
         self.functions = functions
+        as_extism_functions = [_ExtismFunctionMetadata(f) for f in functions or []]
 
         # Register plugin
         errmsg = _ffi.new("char**")
-        if functions is not None:
-            function_ptrs = [f.pointer for f in functions]
+        if as_extism_functions is not None:
+            function_ptrs = [f.pointer for f in as_extism_functions]
             ptr = _ffi.new("ExtismFunction*[]", function_ptrs)
             self.plugin = _lib.extism_plugin_new(
                 wasm, len(wasm), ptr, len(function_ptrs), wasi, errmsg
@@ -804,10 +801,10 @@ def host_fn(
         idx = len(HOST_FN_REGISTRY).to_bytes(length=4, byteorder="big")
         user_data.append(idx)
         fn = (
-            TypeInferredFunction(n, namespace, func, user_data)
+            TypeInferredFunction(namespace, n, func, user_data)
             if signature is None
             else ExplicitFunction(
-                n, namespace, signature[0], signature[1], func, user_data
+                namespace, n, signature[0], signature[1], func, user_data
             )
         )
         HOST_FN_REGISTRY.append(fn)

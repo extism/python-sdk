@@ -297,18 +297,18 @@ files = [
 
 [[package]]
 name = "extism-sys"
-version = "1.0.0rc7"
+version = "1.9.0"
 description = ""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "extism_sys-1.0.0rc7-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:30160c330d279c0032cee083377b24fc91c8d470f82cebd82d0428ee3285e3c6"},
-    {file = "extism_sys-1.0.0rc7-py3-none-macosx_11_0_arm64.whl", hash = "sha256:280bd42ca240df42811cf5c33cd51bb48801a8ce7ad07a7e76a6788e682ea552"},
-    {file = "extism_sys-1.0.0rc7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b2ee03973bf9a6bbfe60fff8626e999b171a69b9ff29737b81fd34daa6d9e9eb"},
-    {file = "extism_sys-1.0.0rc7-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:b0f1bc9c7f7871f1d7bbfeb8a35c7a5b198c5b1a38fb4132fedf2944b0bec95d"},
-    {file = "extism_sys-1.0.0rc7-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:dd5cb9ad9ab75c0de8abb97ce6a56afd50f4938db5620218bb7d888547bf2dc7"},
-    {file = "extism_sys-1.0.0rc7-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:9e371ae30503630bc9d25525f7d9f1f3fb43870c2630b919587deb478da2e820"},
-    {file = "extism_sys-1.0.0rc7-py3-none-win_amd64.whl", hash = "sha256:eecd1cf97b2b6f035207fa179ef8936ad01d1afe8739249194d851d43ed35c05"},
+    {file = "extism_sys-1.9.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:5f69c9270663abc6bed94f6e9aca4adabeb41c58da563f103e8b8fff080dd4f3"},
+    {file = "extism_sys-1.9.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:215bd2efc55f1d3d9ff4dd8765e1f8b9dbe1d9f8326f95f536fe08d40146e18a"},
+    {file = "extism_sys-1.9.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8432d6fc615cd4540ce4f11e1d434a64bdfcabaa093e3e8d9d21ad5dbac9fb76"},
+    {file = "extism_sys-1.9.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:163f927dd0dc86311e7c7058ebc78eb78c8da934c6b15f51146b22989c20ba37"},
+    {file = "extism_sys-1.9.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:4fec14b6abf6d6ff4d4ec13866cef4c71be841c26300c6058c19aec370b2b912"},
+    {file = "extism_sys-1.9.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:797afa1a78cafc42a30403d005aa95e1fbb1e2786a4228a63818333acf573880"},
+    {file = "extism_sys-1.9.0-py3-none-win_amd64.whl", hash = "sha256:0bdd187cf55339fa491dc032c9b95a8ecf7175432e93dc281858fad9538e8184"},
 ]
 
 [package.dependencies]
@@ -841,4 +841,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "a3afa45fdeb391fadd63b9bb68d5535cc5f6f8357a5bb109d10037463f7247b9"
+content-hash = "e82a1b693137e7dc6f674bd958367701b548c98a30c2fd0151177ced2b0b98ca"

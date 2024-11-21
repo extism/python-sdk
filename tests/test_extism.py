@@ -21,7 +21,7 @@ class Gribble:
 
 class TestExtism(unittest.TestCase):
     def test_call_plugin(self):
-        plugin = extism.Plugin(self._manifest())
+        plugin = extism.Plugin(self._manifest(), functions=[])
         j = json.loads(plugin.call("count_vowels", "this is a test"))
         self.assertEqual(j["count"], 4)
         j = json.loads(plugin.call("count_vowels", "this is a test again"))
@@ -32,7 +32,7 @@ class TestExtism(unittest.TestCase):
         self.assertEqual(j["count"], 3)
 
     def test_function_exists(self):
-        plugin = extism.Plugin(self._manifest())
+        plugin = extism.Plugin(self._manifest(), functions=[])
         self.assertTrue(plugin.function_exists("count_vowels"))
         self.assertFalse(plugin.function_exists("i_dont_exist"))
 
@@ -115,7 +115,7 @@ class TestExtism(unittest.TestCase):
             inp: typing.Annotated[
                 str, extism.Codec(lambda xs: xs.decode().replace("o", "u"))
             ],
-            *user_data
+            *user_data,
         ) -> typing.Annotated[
             str, extism.Codec(lambda xs: xs.replace("u", "a").encode())
         ]:

@@ -398,11 +398,18 @@ class TypeInferredFunction(ExplicitFunction):
         arg_names = [arg for arg in hints.keys() if arg != "return"]
         returns = hints.pop("return", None)
 
+        uses_current_plugin = False
+        if len(arg_names) > 0 and hints.get(arg_names[0], None) == CurrentPlugin:
+            uses_current_plugin = True
+            arg_names = arg_names[1:]
+
         args = [_map_arg(arg, hints[arg]) for arg in arg_names]
+
         returns = [] if returns is None else _map_ret(returns)
 
         def inner_func(plugin, inputs, outputs, *user_data):
-            inner_args = [
+            first_arg = [plugin] if uses_current_plugin else []
+            inner_args = first_arg + [
                 extract(plugin, slot) for ((_, extract), slot) in zip(args, inputs)
             ]
 
@@ -523,6 +530,7 @@ class Plugin:
         function_name: str,
         data: Union[str, bytes],
         parse: Callable[[Any], Any] = lambda xs: bytes(xs),
+        host_context: Any = None,
     ) -> Any:
         """
         Call a function by name with the provided input data
@@ -533,11 +541,13 @@ class Plugin:
         :raises: An :py:class:`extism.Error <.extism.Error>` if the guest function call was unsuccessful.
         :returns: The returned bytes from the guest function as interpreted by the ``parse`` parameter.
         """
+
+        host_context = _ffi.new_handle(host_context)
         if isinstance(data, str):
             data = data.encode()
         self._check_error(
-            _lib.extism_plugin_call(
-                self.plugin, function_name.encode(), data, len(data)
+            _lib.extism_plugin_call_with_host_context(
+                self.plugin, function_name.encode(), data, len(data), host_context
             )
         )
         out_len = _lib.extism_plugin_output_length(self.plugin)
@@ -607,6 +617,12 @@ class CurrentPlugin:
         if p == 0:
             return None
         return _ffi.buffer(p + mem.offset, mem.length)
+
+    def host_context(self) -> Any:
+        result = _lib.extism_current_plugin_host_context(self.pointer)
+        if result == 0:
+            return None
+        return _ffi.from_handle(result)
 
     def alloc(self, size: int) -> Memory:
         """

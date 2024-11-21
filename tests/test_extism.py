@@ -1,3 +1,4 @@
+from collections import namedtuple
 import unittest
 import extism
 import hashlib
@@ -144,6 +145,40 @@ class TestExtism(unittest.TestCase):
         )
         res = plugin.call("count_vowels", "aaa")
 
+        result = pickle.loads(res)
+        self.assertIsInstance(result, Gribble)
+        self.assertEqual(result.frobbitz(), "gromble robble")
+
+    def test_host_context(self):
+        if not hasattr(typing, "Annotated"):
+            return
+
+        # Testing two things here: one, if we see CurrentPlugin as the first arg, we pass it through.
+        # Two, it's possible to refer to fetch the host context from the current plugin.
+        @extism.host_fn(user_data=b"test")
+        def hello_world(
+            current_plugin: extism.CurrentPlugin,
+            inp: typing.Annotated[dict, extism.Json],
+            *user_data,
+        ) -> typing.Annotated[Gribble, extism.Pickle]:
+            ctx = current_plugin.host_context()
+            ctx.x = 1000
+            return Gribble("robble")
+
+        plugin = extism.Plugin(
+            self._manifest(functions=True), functions=[hello_world], wasi=True
+        )
+
+        class Foo:
+            x = 100
+            y = 200
+
+        foo = Foo()
+
+        res = plugin.call("count_vowels", "aaa", host_context=foo)
+
+        self.assertEqual(foo.x, 1000)
+        self.assertEqual(foo.y, 200)
         result = pickle.loads(res)
         self.assertIsInstance(result, Gribble)
         self.assertEqual(result.frobbitz(), "gromble robble")

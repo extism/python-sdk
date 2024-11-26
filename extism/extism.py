@@ -438,6 +438,58 @@ class CancelHandle:
         return _lib.extism_plugin_cancel(self.pointer)
 
 
+class CompiledPlugin:
+    """
+    A ``CompiledPlugin`` represents a parsed Wasm module and associated Extism
+    kernel. It can be used to rapidly instantiate plugin instances. A ``Plugin``
+    instantiated with a ``CompiledPlugin`` inherits the functions and WASI settings
+    of the compiled plugin.
+
+    .. sourcecode:: python
+
+        import extism
+
+        compiled = extism.CompiledPlugin({
+            wasm: [
+                { 'url': 'https://example.com/path/to/module.wasm' }
+            ],
+        })
+
+        plugin = extism.Plugin(compiled)
+        plugin.call("example-function")
+    """
+
+    def __init__(
+        self,
+        plugin: Union[str, bytes, dict],
+        wasi: bool = False,
+        functions: Optional[List[Function]] = HOST_FN_REGISTRY,
+    ):
+        wasm = _wasm(plugin)
+        self.functions = functions
+        as_extism_functions = [_ExtismFunctionMetadata(f) for f in functions or []]
+        as_ptrs = [f.pointer for f in as_extism_functions]
+        # Register plugin
+        errmsg = _ffi.new("char**")
+        function_ptrs = (
+            _ffi.NULL if len(as_ptrs) == 0 else _ffi.new("ExtismFunction*[]", as_ptrs)
+        )
+        self.pointer = _lib.extism_compiled_plugin_new(
+            wasm, len(wasm), function_ptrs, len(as_ptrs), wasi, errmsg
+        )
+
+        if self.pointer == _ffi.NULL:
+            msg = _ffi.string(errmsg[0])
+            _lib.extism_plugin_new_error_free(errmsg[0])
+            raise Error(msg.decode())
+
+    def __del__(self):
+        if not hasattr(self, "pointer"):
+            return
+        _lib.extism_compiled_plugin_free(self.pointer)
+        self.pointer = -1
+
+
 class Plugin:
     """
     Plugins are used to call WASM functions. Plugins can kept in a context for
@@ -471,28 +523,20 @@ class Plugin:
 
     def __init__(
         self,
-        plugin: Union[str, bytes, dict],
+        plugin: Union[str, bytes, CompiledPlugin, dict],
         wasi: bool = False,
         config: Optional[Any] = None,
         functions: Optional[List[Function]] = HOST_FN_REGISTRY,
     ):
-        wasm = _wasm(plugin)
-        self.functions = functions
-        as_extism_functions = [_ExtismFunctionMetadata(f) for f in functions or []]
+        if not isinstance(plugin, CompiledPlugin):
+            plugin = CompiledPlugin(plugin, wasi, functions)
 
-        # Register plugin
+        self.compiled_plugin = plugin
         errmsg = _ffi.new("char**")
-        if as_extism_functions is not None:
-            function_ptrs = [f.pointer for f in as_extism_functions]
-            ptr = _ffi.new("ExtismFunction*[]", function_ptrs)
-            self.plugin = _lib.extism_plugin_new(
-                wasm, len(wasm), ptr, len(function_ptrs), wasi, errmsg
-            )
-        else:
-            self.plugin = _lib.extism_plugin_new(
-                wasm, len(wasm), _ffi.NULL, 0, wasi, errmsg
-            )
 
+        self.plugin = _lib.extism_plugin_new_from_compiled(
+            self.compiled_plugin.pointer, errmsg
+        )
         if self.plugin == _ffi.NULL:
             msg = _ffi.string(errmsg[0])
             _lib.extism_plugin_new_error_free(errmsg[0])

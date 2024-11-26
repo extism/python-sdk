@@ -5,7 +5,7 @@ version = "0.0.0+replaced-by-ci"
 description = "Extism Host SDK for python"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["extism-sys>=1.9.0"]
+dependencies = ["extism-sys>=1.9.1"]
 
 [tool.poetry]
 name = "extism"
@@ -18,7 +18,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 cffi = "^1.10.0"
-extism-sys = { version = ">=1.9.0" }
+extism-sys = { version = ">=1.9.1" }
 annotated-types = "^0.6.0"
 
 [tool.poetry.dev-dependencies]

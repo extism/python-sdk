@@ -240,7 +240,9 @@ class Function:
     A host function.
     """
 
-    def __init__(self, namespace: Optional[str], name: str, args, returns, f, *user_data):
+    def __init__(
+        self, namespace: Optional[str], name: str, args, returns, f, *user_data
+    ):
         self.namespace = namespace
         self.name = name
         self.args = [a.value for a in args]

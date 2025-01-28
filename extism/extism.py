@@ -327,13 +327,34 @@ def _map_ret(xs) -> List[Tuple[ValType, Callable[[Any, Any, Any], Any]]]:
         ]
 
     if xs == int:
-        return [(ValType.I64, lambda _, slot, value: slot.assign(value))]
+        return [
+            (
+                ValType.I64,
+                lambda plugin, slot, value: plugin.return_bytes(
+                    slot, value.to_bytes(length=8, byteorder="little")
+                ),
+            )
+        ]
 
     if xs == float:
-        return [(ValType.F64, lambda _, slot, value: slot.assign(value))]
+        return [
+            (
+                ValType.F64,
+                lambda plugin, slot, value: plugin.return_bytes(
+                    slot, value.to_bytes(length=8, byteorder="little")
+                ),
+            )
+        ]
 
     if xs == bool:
-        return [(ValType.I32, lambda _, slot, value: slot.assign(value))]
+        return [
+            (
+                ValType.I32,
+                lambda plugin, slot, value: plugin.return_bytes(
+                    slot, value.to_bytes(length=4, byteorder="little")
+                ),
+            )
+        ]
 
     if get_origin(xs) == tuple:
         return functools.reduce(lambda lhs, rhs: lhs + _map_ret(rhs), get_args(xs), [])

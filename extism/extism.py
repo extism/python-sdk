@@ -551,7 +551,9 @@ class Plugin:
         config: Optional[Any] = None,
         functions: Optional[List[Function]] = HOST_FN_REGISTRY,
     ):
-        if not isinstance(plugin, CompiledPlugin):
+        # Track if we created the CompiledPlugin (so we know to free it)
+        self._owns_compiled_plugin = not isinstance(plugin, CompiledPlugin)
+        if self._owns_compiled_plugin:
             plugin = CompiledPlugin(plugin, wasi, functions)
 
         self.compiled_plugin = plugin
@@ -629,6 +631,10 @@ class Plugin:
             return
         _lib.extism_plugin_free(self.plugin)
         self.plugin = -1
+        # Free the compiled plugin if we created it
+        if getattr(self, "_owns_compiled_plugin", False) and self.compiled_plugin is not None:
+            self.compiled_plugin.__del__()
+            self.compiled_plugin = None
 
     def __enter__(self):
         return self

@@ -64,10 +64,15 @@ class TestExtism(unittest.TestCase):
         with extism.Plugin(self._manifest(), functions=[]) as plugin:
             j = json.loads(plugin.call("count_vowels", "test"))
             self.assertEqual(j["count"], 1)
+            # Plugin should own the compiled plugin it created
+            self.assertTrue(plugin._owns_compiled_plugin)
         
         # Verify plugin was freed after exiting context
         self.assertEqual(plugin.plugin, -1, 
             "Expected plugin.plugin to be -1 after __del__, indicating extism_plugin_free was called")
+        # Verify compiled plugin was also freed (since Plugin owned it)
+        self.assertIsNone(plugin.compiled_plugin,
+            "Expected compiled_plugin to be None after __del__, indicating it was also freed")
 
     def test_compiled_plugin_del_frees_native_resources(self):
         """Test that CompiledPlugin.__del__ properly frees native resources.
@@ -86,11 +91,18 @@ class TestExtism(unittest.TestCase):
         j = json.loads(plugin.call("count_vowels", "test"))
         self.assertEqual(j["count"], 1)
         
+        # Plugin should NOT own the compiled plugin (it was passed in)
+        self.assertFalse(plugin._owns_compiled_plugin)
+        
         # Clean up plugin first
         plugin.__del__()
         self.assertEqual(plugin.plugin, -1)
         
-        # Now clean up compiled plugin
+        # Compiled plugin should NOT have been freed by Plugin.__del__
+        self.assertNotEqual(compiled.pointer, -1,
+            "Expected compiled.pointer to NOT be -1 since Plugin didn't own it")
+        
+        # Now clean up compiled plugin manually
         compiled.__del__()
         
         # Verify compiled plugin was freed

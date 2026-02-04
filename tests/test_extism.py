@@ -9,9 +9,9 @@ import unittest
 from datetime import datetime, timedelta
 from os.path import join, dirname
 from threading import Thread
-from unittest.mock import patch
 
 import extism
+from extism.extism import CompiledPlugin, _ExtismFunctionMetadata, TypeInferredFunction
 
 
 # A pickle-able object.
@@ -68,6 +68,52 @@ class TestExtism(unittest.TestCase):
         # Verify plugin was freed after exiting context
         self.assertEqual(plugin.plugin, -1, 
             "Expected plugin.plugin to be -1 after __del__, indicating extism_plugin_free was called")
+
+    def test_compiled_plugin_del_frees_native_resources(self):
+        """Test that CompiledPlugin.__del__ properly frees native resources.
+        
+        Unlike Plugin, CompiledPlugin has no context manager so __del__ is only
+        called once by garbage collection. This also tests that __del__ can be
+        safely called multiple times without causing double-free errors.
+        """
+        compiled = CompiledPlugin(self._manifest(), functions=[])
+        # Verify pointer exists before deletion
+        self.assertTrue(hasattr(compiled, 'pointer'))
+        self.assertNotEqual(compiled.pointer, -1)
+        
+        # Create a plugin from compiled to ensure it works
+        plugin = extism.Plugin(compiled)
+        j = json.loads(plugin.call("count_vowels", "test"))
+        self.assertEqual(j["count"], 1)
+        
+        # Clean up plugin first
+        plugin.__del__()
+        self.assertEqual(plugin.plugin, -1)
+        
+        # Now clean up compiled plugin
+        compiled.__del__()
+        
+        # Verify compiled plugin was freed
+        self.assertEqual(compiled.pointer, -1,
+            "Expected compiled.pointer to be -1 after __del__, indicating extism_compiled_plugin_free was called")
+
+    def test_extism_function_metadata_del_frees_native_resources(self):
+        """Test that _ExtismFunctionMetadata.__del__ properly frees native resources."""
+        def test_host_fn(inp: str) -> str:
+            return inp
+        
+        func = TypeInferredFunction(None, "test_func", test_host_fn, [])
+        metadata = _ExtismFunctionMetadata(func)
+        
+        # Verify pointer exists before deletion
+        self.assertTrue(hasattr(metadata, 'pointer'))
+        self.assertIsNotNone(metadata.pointer)
+        
+        metadata.__del__()
+        
+        # Verify function was freed (pointer set to None)
+        self.assertIsNone(metadata.pointer,
+            "Expected metadata.pointer to be None after __del__, indicating extism_function_free was called")
 
     def test_errors_on_bad_manifest(self):
         self.assertRaises(

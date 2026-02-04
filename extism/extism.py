@@ -270,10 +270,10 @@ class _ExtismFunctionMetadata:
             _lib.extism_function_set_namespace(self.pointer, f.namespace.encode())
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "pointer") or self.pointer is None:
             return
-        if self.pointer is not None:
-            _lib.extism_function_free(self.pointer)
+        _lib.extism_function_free(self.pointer)
+        self.pointer = None
 
 
 def _map_arg(arg_name, xs) -> Tuple[ValType, Callable[[Any, Any], Any]]:
@@ -507,7 +507,7 @@ class CompiledPlugin:
             raise Error(msg.decode())
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "pointer") or self.pointer == -1:
             return
         _lib.extism_compiled_plugin_free(self.pointer)
         self.pointer = -1

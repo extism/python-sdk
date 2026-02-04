@@ -1,14 +1,17 @@
 from collections import namedtuple
-import unittest
-import extism
+import gc
 import hashlib
 import json
+import pickle
 import time
-from threading import Thread
+import typing
+import unittest
 from datetime import datetime, timedelta
 from os.path import join, dirname
-import typing
-import pickle
+from threading import Thread
+from unittest.mock import patch
+
+import extism
 
 
 # A pickle-able object.
@@ -46,6 +49,25 @@ class TestExtism(unittest.TestCase):
     def test_can_free_plugin(self):
         plugin = extism.Plugin(self._manifest())
         del plugin
+
+    def test_plugin_del_frees_native_resources(self):
+        """Test that Plugin.__del__ properly frees native resources.
+        
+        This tests the fix for a bug where Plugin.__del__ checked for
+        'self.pointer' instead of 'self.plugin', causing extism_plugin_free
+        to never be called and leading to memory leaks.
+        
+        This also tests that __del__ can be safely called multiple times
+        (via context manager exit and garbage collection) without causing
+        double-free errors.
+        """
+        with extism.Plugin(self._manifest(), functions=[]) as plugin:
+            j = json.loads(plugin.call("count_vowels", "test"))
+            self.assertEqual(j["count"], 1)
+        
+        # Verify plugin was freed after exiting context
+        self.assertEqual(plugin.plugin, -1, 
+            "Expected plugin.plugin to be -1 after __del__, indicating extism_plugin_free was called")
 
     def test_errors_on_bad_manifest(self):
         self.assertRaises(

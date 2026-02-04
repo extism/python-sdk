@@ -625,7 +625,7 @@ class Plugin:
         return parse(buf)
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "plugin") or self.plugin == -1:
             return
         _lib.extism_plugin_free(self.plugin)
         self.plugin = -1

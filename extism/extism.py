@@ -507,7 +507,7 @@ class CompiledPlugin:
             raise Error(msg.decode())
 
     def __del__(self):
-        if not hasattr(self, "pointer") or self.pointer == -1:
+        if not hasattr(self, "pointer") or self.pointer is None or self.pointer == -1:
             return
         _lib.extism_compiled_plugin_free(self.pointer)
         self.pointer = -1

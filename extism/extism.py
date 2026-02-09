@@ -644,7 +644,7 @@ def _convert_value(x):
         return Val(ValType.I64, x.v.i64)
     elif x.t == 2:
         return Val(ValType.F32, x.v.f32)
-    elif x.y == 3:
+    elif x.t == 3:
         return Val(ValType.F64, x.v.f64)
     return None
 

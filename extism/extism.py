@@ -270,10 +270,10 @@ class _ExtismFunctionMetadata:
             _lib.extism_function_set_namespace(self.pointer, f.namespace.encode())
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "pointer") or self.pointer is None:
             return
-        if self.pointer is not None:
-            _lib.extism_function_free(self.pointer)
+        _lib.extism_function_free(self.pointer)
+        self.pointer = None
 
 
 def _map_arg(arg_name, xs) -> Tuple[ValType, Callable[[Any, Any], Any]]:
@@ -507,7 +507,7 @@ class CompiledPlugin:
             raise Error(msg.decode())
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "pointer") or self.pointer is None or self.pointer == -1:
             return
         _lib.extism_compiled_plugin_free(self.pointer)
         self.pointer = -1
@@ -551,10 +551,14 @@ class Plugin:
         config: Optional[Any] = None,
         functions: Optional[List[Function]] = HOST_FN_REGISTRY,
     ):
-        if not isinstance(plugin, CompiledPlugin):
-            plugin = CompiledPlugin(plugin, wasi, functions)
-
-        self.compiled_plugin = plugin
+        # Track if we created the CompiledPlugin (so we know to free it)
+        if isinstance(plugin, CompiledPlugin):
+            self._owns_compiled_plugin = False
+            self.compiled_plugin: Optional[CompiledPlugin] = plugin
+        else:
+            self._owns_compiled_plugin = True
+            self.compiled_plugin = CompiledPlugin(plugin, wasi, functions)
+        assert self.compiled_plugin is not None
         errmsg = _ffi.new("char**")
 
         self.plugin = _lib.extism_plugin_new_from_compiled(
@@ -625,10 +629,17 @@ class Plugin:
         return parse(buf)
 
     def __del__(self):
-        if not hasattr(self, "pointer"):
+        if not hasattr(self, "plugin") or self.plugin == -1:
             return
         _lib.extism_plugin_free(self.plugin)
         self.plugin = -1
+        # Free the compiled plugin if we created it
+        if (
+            getattr(self, "_owns_compiled_plugin", False)
+            and self.compiled_plugin is not None
+        ):
+            self.compiled_plugin.__del__()
+            self.compiled_plugin = None
 
     def __enter__(self):
         return self

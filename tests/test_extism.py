@@ -308,6 +308,22 @@ class TestExtism(unittest.TestCase):
         return read_test_wasm("loop.wasm")
 
 
+class TestConvertValue(unittest.TestCase):
+    """Tests for the _convert_value helper that converts CFFI ExtismVal structs."""
+
+    def _make_extism_val(self, t, **kwargs):
+        """Create a mock ExtismVal with type tag `t` and value fields."""
+        val_union = namedtuple("ValUnion", kwargs.keys())(**kwargs)
+        return namedtuple("ExtismVal", ["t", "v"])(t=t, v=val_union)
+
+    def test_convert_f64_value(self):
+        x = self._make_extism_val(3, f64=3.14)
+        result = extism.extism._convert_value(x)
+        self.assertIsNotNone(result, "_convert_value returned None for F64 input")
+        self.assertEqual(result.t, extism.ValType.F64)
+        self.assertAlmostEqual(result.value, 3.14)
+
+
 def read_test_wasm(p):
     path = join(dirname(__file__), "..", "wasm", p)
     with open(path, "rb") as wasm_file:

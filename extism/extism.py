@@ -14,7 +14,7 @@ from typing import (
     Optional,
     Tuple,
 )
-from enum import Enum
+from enum import IntEnum
 from uuid import UUID
 from extism_sys import lib as _lib, ffi as _ffi  # type: ignore
 import functools
@@ -104,7 +104,7 @@ class Error(Exception):
     ...
 
 
-class ValType(Enum):
+class ValType(IntEnum):
     """
     An enumeration of all available `Wasm value types <https://docs.rs/wasmtime/latest/wasmtime/enum.ValType.html>`.
 
@@ -648,6 +648,8 @@ class Plugin:
 
 
 def _convert_value(x):
+    # x is and instance of ExtismVal 
+    # https://github.com/extism/extism/blob/de81040c999279f04f8361b7684d5d0af487394f/runtime/src/sdk.rs#L32
     if x.t == 0:
         return Val(ValType.I32, x.v.i32)
     elif x.t == 1:
